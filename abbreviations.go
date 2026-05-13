@@ -54,11 +54,11 @@ var AbbreviationTags = map[string][]Tag{
 	"st.":   {TagPROPN},
 
 	// Geographic
-	"u.s":   {TagPROPN},
-	"u.s.":  {TagPROPN},
-	"u.k":   {TagPROPN},
-	"u.k.":  {TagPROPN},
-	"u.s.a": {TagPROPN},
+	"u.s":    {TagPROPN},
+	"u.s.":   {TagPROPN},
+	"u.k":    {TagPROPN},
+	"u.k.":   {TagPROPN},
+	"u.s.a":  {TagPROPN},
 	"u.s.a.": {TagPROPN},
 
 	// Organizational suffixes
@@ -72,12 +72,12 @@ var AbbreviationTags = map[string][]Tag{
 	"co.":   {TagPROPN},
 
 	// Miscellaneous
-	"fig":   {TagNOUN},
-	"fig.":  {TagNOUN},
-	"no":    {TagNOUN},
-	"no.":   {TagNOUN},
-	"vol":   {TagNOUN},
-	"vol.":  {TagNOUN},
-	"pp":    {TagNOUN},
-	"pp.":   {TagNOUN},
+	"fig":  {TagNOUN},
+	"fig.": {TagNOUN},
+	"no":   {TagNOUN},
+	"no.":  {TagNOUN},
+	"vol":  {TagNOUN},
+	"vol.": {TagNOUN},
+	"pp":   {TagNOUN},
+	"pp.":  {TagNOUN},
 }
