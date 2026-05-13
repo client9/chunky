@@ -1,6 +1,10 @@
 package tok
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/client9/chunky"
+)
 
 // stripInlineCitations removes Wikipedia-style numeric citation markers
 // embedded within a field, e.g. "Planeteers.[8]" → "Planeteers."
@@ -33,6 +37,46 @@ func stripInlineCitations(s string) string {
 		s = s[:i] + s[i+j+1:]
 	}
 	return s
+}
+
+// MergeCompounds scans the token stream left-to-right and replaces sequences
+// matching chunky.CompoundTags with a single token carrying the compound tag.
+// Longest match wins. Offset is taken from the first token in the sequence.
+func MergeCompounds(tokens []Token) []Token {
+	if len(tokens) == 0 {
+		return tokens
+	}
+	out := make([]Token, 0, len(tokens))
+	i := 0
+	for i < len(tokens) {
+		merged := false
+		for length := chunky.CompoundMaxLen; length >= 2; length-- {
+			if i+length > len(tokens) {
+				continue
+			}
+			words := make([]string, length)
+			for j := 0; j < length; j++ {
+				words[j] = strings.ToLower(tokens[i+j].Word)
+			}
+			key := strings.Join(words, " ")
+			if tag, ok := chunky.CompoundTags[key]; ok {
+				out = append(out, Token{
+					Word:      strings.Join(words, "_"),
+					Offset:    tokens[i].Offset,
+					Canidates: []chunky.Tag{tag},
+					Rule:      "compound",
+				})
+				i += length
+				merged = true
+				break
+			}
+		}
+		if !merged {
+			out = append(out, tokens[i])
+			i++
+		}
+	}
+	return out
 }
 
 // FilterBrackets removes bracketed spans from the token stream.
