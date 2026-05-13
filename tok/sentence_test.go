@@ -90,6 +90,42 @@ func TestSegmentSentenceInitialDET(t *testing.T) {
 	}
 }
 
+// TestSegmentSentenceInitialName verifies that a sentence-initial word resolved
+// by morphology/inflection (not the lexicon) is promoted to PROPN. "Ted" would
+// otherwise be tagged VERB by the -ed inflection rule.
+func TestSegmentSentenceInitialName(t *testing.T) {
+	sents := Segment(TagUnknowns(FilterBrackets(TagString("Ted Turner spoke."))))
+	if len(sents) != 1 {
+		t.Fatalf("want 1 sentence, got %d", len(sents))
+	}
+	first := sents[0].Tokens[0]
+	if first.Word != "Ted" {
+		t.Fatalf("expected 'Ted', got %q", first.Word)
+	}
+	if len(first.Canidates) != 1 || first.Canidates[0].String() != "PROPN" {
+		t.Errorf("'Ted' at sentence start: got %v, want [PROPN]", first.Canidates)
+	}
+}
+
+// TestSegmentSentenceInitialLexiconWord verifies that a sentence-initial word
+// found in the lexicon keeps its lexicon tag rather than being promoted to PROPN.
+func TestSegmentSentenceInitialLexiconWord(t *testing.T) {
+	sents := Segment(TagUnknowns(FilterBrackets(TagString("Run fast."))))
+	if len(sents) != 1 {
+		t.Fatalf("want 1 sentence, got %d", len(sents))
+	}
+	first := sents[0].Tokens[0]
+	if first.Word != "Run" {
+		t.Fatalf("expected 'Run', got %q", first.Word)
+	}
+	// "run" is in the lexicon; should NOT be promoted to PROPN
+	for _, c := range first.Canidates {
+		if c.String() == "PROPN" {
+			t.Errorf("'Run' at sentence start: got PROPN, want lexicon tag (VERB/NOUN)")
+		}
+	}
+}
+
 func joinWords(tokens []Token) string {
 	out := ""
 	for i, t := range tokens {
