@@ -6,6 +6,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/client9/chunky"
+	"github.com/client9/typewriter"
 )
 
 type rawToken struct {
@@ -16,6 +17,14 @@ type rawToken struct {
 // surfaceTokenizeRaw splits s into tokens, recording each token's byte offset
 // in the original string.
 func surfaceTokenizeRaw(s string) []rawToken {
+
+	// TODO: make a global?  It can be reused concurrently.
+    	tw := typewriter.New(typewriter.Config{
+		// Unclear what the right behavior is with other unicode symboles
+		// so start with quotes, dashes, and spaces.
+        	Categories: typewriter.Quotes | typewriter.Dashes | typewriter.Spaces,
+    	})
+
 	out := make([]rawToken, 0, 16)
 	i := 0
 	for i < len(s) {
@@ -40,7 +49,18 @@ func surfaceTokenizeRaw(s string) []rawToken {
 			i += size
 		}
 
-		p := stripInlineCitations(s[start:i])
+		//
+		// unicode normalize with client/typewriter
+		//
+		// TODO: add client9/demoji once it's stable.
+		//
+		p := s[start:i]
+		p = tw.Replace(p)
+
+		//
+		// remove [items in square brackets]
+		//
+		p = stripInlineCitations(p)
 		pos := start
 
 		if len(p) == 0 {
