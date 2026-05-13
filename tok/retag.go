@@ -11,14 +11,9 @@ func LexicalRetag(tokens []Token) []Token {
 		}
 		if i == 0 {
 			// Sentence-initial capitalization is grammatical, not semantic.
-			// Only promote to PROPN if the word got a non-noun tag from a
-			// morphological rule — e.g. "Ted" tagged VERB by the -ed inflection.
-			// Words already tagged NOUN (unk:word fallback, morph suffix) stay NOUN:
-			// "Hantaviruses" starts a sentence but is not a proper noun.
-			if t.Rule != "lexicon" && !t.IsUnknownTag() && t.Canidates[0] != chunky.TagNOUN {
-				tokens[i].Canidates = []chunky.Tag{chunky.TagPROPN}
-				tokens[i].Rule = t.Rule + "+caps"
-			}
+			// We cannot distinguish a proper noun from a sentence-initial verb or
+			// participle (e.g. "Walked the dog." vs "Ted is here."), so we leave
+			// the pipeline tag unchanged.
 			continue
 		}
 		// Non-sentence-initial: any known capitalized word → PROPN.

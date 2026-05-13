@@ -90,23 +90,6 @@ func TestSegmentSentenceInitialDET(t *testing.T) {
 	}
 }
 
-// TestSegmentSentenceInitialName verifies that a sentence-initial word resolved
-// by morphology/inflection (not the lexicon) is promoted to PROPN. "Ted" would
-// otherwise be tagged VERB by the -ed inflection rule.
-func TestSegmentSentenceInitialName(t *testing.T) {
-	sents := Segment(TagUnknowns(FilterBrackets(TagString("Ted Turner spoke."))))
-	if len(sents) != 1 {
-		t.Fatalf("want 1 sentence, got %d", len(sents))
-	}
-	first := sents[0].Tokens[0]
-	if first.Word != "Ted" {
-		t.Fatalf("expected 'Ted', got %q", first.Word)
-	}
-	if len(first.Canidates) != 1 || first.Canidates[0].String() != "PROPN" {
-		t.Errorf("'Ted' at sentence start: got %v, want [PROPN]", first.Canidates)
-	}
-}
-
 // TestSegmentSentenceInitialNoun verifies that a sentence-initial unknown word
 // tagged NOUN by the unk:word fallback stays NOUN and is not promoted to PROPN.
 // Capitalization at sentence start is grammatical, not a proper-noun signal.
