@@ -22,10 +22,10 @@ func TestSegment(t *testing.T) {
 			"Stop! Are you sure?",
 			[]string{"Stop !", "Are you sure ?"},
 		},
-		// abbreviation does not split
+		// abbreviation does not split; "Dr." stays atomic
 		{
 			"Dr. Smith arrived.",
-			[]string{"Dr . Smith arrived ."},
+			[]string{"Dr. Smith arrived ."},
 		},
 		// middle initial does not split
 		{

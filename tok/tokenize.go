@@ -82,12 +82,15 @@ func surfaceTokenizeRaw(s string) []rawToken {
 			continue
 		}
 
-		// strip trailing sentence punctuation
+		// strip trailing sentence punctuation, but keep the dot when the whole
+		// word is a known dotted abbreviation (p., Dr., etc.) so it stays atomic.
 		last, lastPos := "", 0
 		if ch := p[len(p)-1]; ch == ',' || ch == '.' || ch == ':' || ch == ';' || ch == '!' || ch == '?' {
-			last = string(ch)
-			lastPos = pos + len(p) - 1
-			p = p[:len(p)-1]
+			if ch != '.' || !chunky.DottedAbbreviations[strings.ToLower(p)] {
+				last = string(ch)
+				lastPos = pos + len(p) - 1
+				p = p[:len(p)-1]
+			}
 		}
 		if len(p) == 0 {
 			if last != "" {

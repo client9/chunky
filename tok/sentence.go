@@ -24,11 +24,9 @@ func isAbbrevToken(t Token) bool {
 	if strings.Contains(t.Word, ".") {
 		return true
 	}
-	// ADV-tagged short abbreviations without dots: etc, vs
-	for _, tag := range t.Canidates {
-		if tag == chunky.TagADV {
-			return true
-		}
+	// known abbreviations (etc, vs, am, pm, …) that don't end sentences
+	if _, ok := chunky.AbbreviationTags[strings.ToLower(t.Word)]; ok {
+		return true
 	}
 	return false
 }
