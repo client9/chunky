@@ -201,6 +201,12 @@ func TestHyphenCandidates(t *testing.T) {
 	}{
 		{"co-chairman", chunky.TagNOUN},
 		{"mid-1990s", chunky.TagNOUN},
+		// adjectival suffixes always produce ADJ regardless of standalone tag
+		// adjectival suffixes always produce ADJ regardless of standalone tag
+		{"flu-like", chunky.TagADJ},
+		{"war-like", chunky.TagADJ},
+		{"sugar-free", chunky.TagADJ},
+		{"industry-wide", chunky.TagADJ},
 	}
 	for _, tc := range tests {
 		tags, rule := HyphenCandidates(tc.word)

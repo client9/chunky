@@ -512,6 +512,14 @@ func InflectionCandidates(word string) ([]chunky.Tag, string) {
 	return out, "inflect:" + matchedSuffix + ":" + matchedStem
 }
 
+// hyphenAdjSuffixes are suffixes that always produce ADJ in a hyphenated
+// compound regardless of how the suffix is tagged as a standalone word.
+var hyphenAdjSuffixes = map[string]bool{
+	"like": true, // flu-like, war-like, life-like
+	"free": true, // sugar-free, tax-free
+	"wide": true, // nationwide, industry-wide
+}
+
 // HyphenCandidates handles lowercase hyphenated compounds by looking up the
 // last component in the lexicon and applying morph rules to it as a fallback.
 func HyphenCandidates(word string) ([]chunky.Tag, string) {
@@ -520,6 +528,11 @@ func HyphenCandidates(word string) ([]chunky.Tag, string) {
 		return nil, ""
 	}
 	last := strings.ToLower(word[i+1:])
+
+	// Known adjectival suffixes override the lexicon.
+	if hyphenAdjSuffixes[last] {
+		return []chunky.Tag{chunky.TagADJ}, "hyphen:adj-suffix:" + last
+	}
 
 	// Try lexicon lookup on the last component.
 	if tags, ok := wordtagmap[last]; ok {
@@ -540,14 +553,18 @@ func HyphenCandidates(word string) ([]chunky.Tag, string) {
 }
 
 // Unk1 applies context-based rules for unknown words using neighboring tags.
-func Unk1(toks []Token, i int) ([]chunky.Tag, string) {
-	if i == 0 || i == len(toks)-1 {
-		return nil, ""
+// isAlpha returns true if every rune in s is a Unicode letter.
+// Digits, symbols, and mixed-script words return false and stay untagged.
+func isAlpha(s string) bool {
+	if len(s) == 0 {
+		return false
 	}
-	if toks[i-1].HasTag(chunky.TagDET) && toks[i+1].HasTag(chunky.TagNOUN) {
-		return []chunky.Tag{chunky.TagNOUN, chunky.TagADJ}, "ctx:det+noun"
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return false
+		}
 	}
-	return nil, ""
+	return true
 }
 
 func TagUnknowns(tokens []Token) []Token {
@@ -570,9 +587,9 @@ func TagUnknowns(tokens []Token) []Token {
 			tokens[i].Rule = rule
 			continue
 		}
-		if candidates, rule := Unk1(tokens, i); candidates != nil {
-			tokens[i].Canidates = candidates
-			tokens[i].Rule = rule
+		if isAlpha(t.Word) {
+			tokens[i].Canidates = []chunky.Tag{chunky.TagNOUN}
+			tokens[i].Rule = "unk:word"
 		}
 	}
 	return tokens
