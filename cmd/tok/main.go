@@ -1,0 +1,52 @@
+package main
+
+import (
+	"fmt"
+//	"github.com/client9/chunky"
+	"github.com/client9/chunky/tok"
+	"io"
+	"os"
+	"log"
+	"strings"
+)
+
+func main() {
+
+	// Read from Stdin
+	b, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		log.Fatalf("unable read input: %s", err)
+	}
+
+	sentences := tok.Segment(tok.TagUnknowns(tok.FilterBrackets(tok.TagString(string(b)))))
+	format := "md"
+
+	switch format {
+	case "plain":
+		for _, s := range sentences {
+			for _, t := range s.Tokens {
+				fmt.Printf("%s\n", t)
+			}
+		}
+		fmt.Println("")
+
+	case "md":
+		fmt.Println("| sent | offset | word | tags | rule |")
+		fmt.Println("|------|--------|------|------|------|")
+
+		for sn, s := range sentences {
+			for _, t := range s.Tokens {
+				parts := make([]string, len(t.Canidates))
+				for i, tag := range t.Canidates {
+					parts[i] = tag.String()
+				}
+				tags := strings.Join(parts, ", ")
+				if tags == "" {
+					tags = "**UNK**"
+				}
+				fmt.Printf("| %d | %d | %s | %s | %s |\n", sn+1, t.Offset, t.Word, tags, t.Rule)
+			}
+		}
+		fmt.Println("")
+	}
+}
