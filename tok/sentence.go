@@ -66,6 +66,13 @@ func isBoundary(tokens []Token, i int) bool {
 	return true
 }
 
+// Parse runs the full pipeline on s and returns tagged sentences.
+// This is the primary entry point for callers; the pipeline order is an
+// implementation detail that only this package needs to know.
+func Parse(s string) []Sentence {
+	return Segment(TagUnknowns(MergeCompounds(FilterBrackets(TagString(s)))))
+}
+
 // Segment splits a flat token slice into sentences. LexicalRetag is applied
 // per-sentence so that sentence-initial capitalized words are handled correctly.
 func Segment(tokens []Token) []Sentence {
