@@ -18,7 +18,7 @@ func main() {
 		log.Fatalf("unable read input: %s", err)
 	}
 
-	sentences := tok.Segment(tok.TagUnknowns(tok.FilterBrackets(tok.TagString(string(b)))))
+	sentences := tok.Parse(string(b))
 	format := "md"
 
 	switch format {
