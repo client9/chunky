@@ -107,6 +107,23 @@ func TestSegmentSentenceInitialName(t *testing.T) {
 	}
 }
 
+// TestSegmentSentenceInitialNoun verifies that a sentence-initial unknown word
+// tagged NOUN by the unk:word fallback stays NOUN and is not promoted to PROPN.
+// Capitalization at sentence start is grammatical, not a proper-noun signal.
+func TestSegmentSentenceInitialNoun(t *testing.T) {
+	sents := Segment(TagUnknowns(FilterBrackets(TagString("Hantaviruses are dangerous."))))
+	if len(sents) != 1 {
+		t.Fatalf("want 1 sentence, got %d", len(sents))
+	}
+	first := sents[0].Tokens[0]
+	if first.Word != "Hantaviruses" {
+		t.Fatalf("expected 'Hantaviruses', got %q", first.Word)
+	}
+	if len(first.Canidates) != 1 || first.Canidates[0].String() != "NOUN" {
+		t.Errorf("'Hantaviruses' at sentence start: got %v, want [NOUN]", first.Canidates)
+	}
+}
+
 // TestSegmentSentenceInitialLexiconWord verifies that a sentence-initial word
 // found in the lexicon keeps its lexicon tag rather than being promoted to PROPN.
 func TestSegmentSentenceInitialLexiconWord(t *testing.T) {
