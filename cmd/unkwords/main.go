@@ -47,7 +47,7 @@ func main() {
 				continue
 			}
 			var tokens []tok.Token
-			for _, s := range tok.Segment(tok.TagUnknowns(tok.FilterBrackets(tok.TagString(sentence)))) {
+			for _, s := range tok.Parse(sentence) {
 				tokens = append(tokens, s.Tokens...)
 			}
 			for _, t := range tokens {
