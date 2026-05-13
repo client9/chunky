@@ -4,7 +4,18 @@ package chunky
 // Both dotted and undotted forms are included since the tokenizer
 // may strip trailing periods depending on context.
 var AbbreviationTags = map[string][]Tag{
-	// Irregular contractions (regular ones handled by InflectionCandidates suffix rule)
+	// Contraction suffixes produced by the surface tokenizer split.
+	// 's is ambiguous: AUX (copula: "it's") or PART (possessive marker: "John's").
+	"'ll": {TagAUX},
+	"'re": {TagAUX},
+	"'ve": {TagAUX},
+	"'m":  {TagAUX},
+	"'d":  {TagAUX},
+	"'s":  {TagAUX, TagPART},
+	"n't": {TagADV},
+	"'t":  {TagADV},
+
+	// Irregular contractions kept whole (ContractionNorm handles won't/shan't split).
 	"won't":  {TagAUX},
 	"wont":   {TagAUX},
 	"ain't":  {TagAUX},

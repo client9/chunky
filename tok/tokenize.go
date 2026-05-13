@@ -111,6 +111,71 @@ func surfaceTokenizeRaw(s string) []rawToken {
 			out = append(out, rawToken{last, lastPos})
 		}
 	}
+	return splitContractions(out)
+}
+
+// contractionSuffixes is the set of apostrophe-led suffixes that trigger a split.
+var contractionSuffixes = map[string]bool{
+	"'ll": true, "'re": true, "'ve": true, "'m": true, "'d": true, "'s": true,
+	"'t": true,
+}
+
+// splitContractions expands contraction tokens into (stem, suffix) pairs.
+// It fires on words whose suffix (from the apostrophe onward) is a known
+// contraction suffix. Irregular forms in chunky.ContractionNorm are handled
+// first. Words in chunky.AbbreviationTags that are NOT in ContractionNorm
+// stay whole (e.g., "ain't").
+func splitContractions(tokens []rawToken) []rawToken {
+	out := make([]rawToken, 0, len(tokens)+4)
+	for _, t := range tokens {
+		lower := strings.ToLower(t.word)
+
+		// Irregular forms: won't → will + n't, shan't → shall + n't.
+		if parts, ok := chunky.ContractionNorm[lower]; ok {
+			out = append(out, rawToken{parts[0], t.offset})
+			out = append(out, rawToken{parts[1], t.offset + len(t.word) - len(parts[1])})
+			continue
+		}
+
+		// Words that stay whole (ain't, o'clock, etc.) — already in AbbreviationTags.
+		if _, ok := chunky.AbbreviationTags[lower]; ok {
+			out = append(out, t)
+			continue
+		}
+
+		ap := strings.IndexByte(t.word, '\'')
+		if ap <= 0 {
+			out = append(out, t)
+			continue
+		}
+
+		suffix := lower[ap:]
+
+		// n't: move the n to the suffix when the stem-without-n is in the lexicon
+		// (don't→do+n't, shouldn't→should+n't); keep n in stem otherwise
+		// (can't→can+n't, where "ca" is not a word).
+		if suffix == "'t" && ap >= 2 && (t.word[ap-1] == 'n' || t.word[ap-1] == 'N') {
+			stemNoN := strings.ToLower(t.word[:ap-1])
+			if len(wordtagmap[stemNoN]) > 0 || len(chunky.AbbreviationTags[stemNoN]) > 0 {
+				// n belongs to suffix: don't→do+n't, shouldn't→should+n't
+				out = append(out, rawToken{t.word[:ap-1], t.offset})
+				out = append(out, rawToken{"n't", t.offset + ap - 1})
+			} else {
+				// n belongs to stem: can't→can+'t (no byte overlap)
+				out = append(out, rawToken{t.word[:ap], t.offset})
+				out = append(out, rawToken{"'t", t.offset + ap})
+			}
+			continue
+		}
+
+		if contractionSuffixes[suffix] {
+			out = append(out, rawToken{t.word[:ap], t.offset})
+			out = append(out, rawToken{t.word[ap:], t.offset + ap})
+			continue
+		}
+
+		out = append(out, t)
+	}
 	return out
 }
 
@@ -160,10 +225,18 @@ func TagString(s string) []Token {
 	out := make([]Token, len(raw))
 
 	for i, r := range raw {
-		candidates := wordtagmap[strings.ToLower(r.word)]
-		rule := ""
-		if len(candidates) > 0 {
-			rule = "lexicon"
+		lower := strings.ToLower(r.word)
+		candidates := wordtagmap[lower]
+		rule := "lexicon"
+		if len(candidates) == 0 {
+			// AbbreviationTags is the runtime-editable override layer; entries
+			// added there (e.g., contraction suffixes) don't require regenerating
+			// the compiled lexicon.
+			if tags, ok := chunky.AbbreviationTags[lower]; ok {
+				candidates = tags
+			} else {
+				rule = ""
+			}
 		}
 		out[i] = Token{
 			Word:      r.word,
@@ -429,32 +502,6 @@ func InflectionCandidates(word string) ([]chunky.Tag, string) {
 	tryDoubled := func(suffix, stem string) {
 		if len(stem) >= 2 && stem[len(stem)-1] == stem[len(stem)-2] {
 			try(suffix, stem[:len(stem)-1])
-		}
-	}
-
-	// negating contractions: "can't" → "can", "don't" → "do", "shouldn't" → "should"
-	// handles both "'t" and "n't" forms, and typographic apostrophe
-	for _, suffix := range []string{"n't", "n't", "'t", "'t"} {
-		if strings.HasSuffix(lower, suffix) && len(lower) > len(suffix) {
-			try("'t", lower[:len(lower)-len(suffix)])
-		}
-	}
-
-	// possessives: "father's" → "father", "fathers'" → "fathers" / "father"
-	// handle both ASCII apostrophe and typographic right single quote (U+2019)
-	for _, apos := range []string{"’s", "'s"} {
-		if strings.HasSuffix(lower, apos) && len(lower) > len(apos) {
-			try("'s", lower[:len(lower)-len(apos)])
-		}
-	}
-	for _, apos := range []string{"’", "'"} {
-		if strings.HasSuffix(lower, apos) && len(lower) > len(apos) {
-			stem := lower[:len(lower)-len(apos)]
-			try("'", stem)
-			// also try de-pluralized: "fathers'" → "father"
-			if strings.HasSuffix(stem, "s") && !strings.HasSuffix(stem, "ss") && len(stem) > 2 {
-				try("'-s", stem[:len(stem)-1])
-			}
 		}
 	}
 

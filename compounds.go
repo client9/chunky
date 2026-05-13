@@ -2,6 +2,14 @@ package chunky
 
 import "strings"
 
+// ContractionNorm maps irregular contraction forms (lowercase, ASCII apostrophe)
+// to their canonical two-token split. The surface tokenizer checks this before
+// applying the general apostrophe-split rule.
+var ContractionNorm = map[string][2]string{
+	"won't":  {"will", "n't"},
+	"shan't": {"shall", "n't"},
+}
+
 // CompoundTags maps space-separated lowercase word sequences to their UD tag.
 // Used by both the runtime retokenizer and corpus processing tools (lexrules)
 // so that rule generation and tagging operate on the same token stream.
