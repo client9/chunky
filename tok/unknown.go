@@ -8,10 +8,15 @@ import (
 )
 
 // TagUnknowns fills in candidate tags for tokens that have none, trying rules
-// in order: inflection → hyphen → morphology → alpha fallback.
+// in order: numeric → inflection → hyphen → morphology → alpha fallback.
 func TagUnknowns(tokens []Token) []Token {
 	for i, t := range tokens {
 		if !t.IsUnknownTag() {
+			continue
+		}
+		if candidates, rule := NumericCandidates(t.Word); candidates != nil {
+			tokens[i].Candidates = candidates
+			tokens[i].Rule = rule
 			continue
 		}
 		if candidates, rule := InflectionCandidates(t.Word); candidates != nil {
@@ -131,11 +136,33 @@ func HyphenCandidates(word string) ([]chunky.Tag, string) {
 	if tags, ok := wordtagmap[last]; ok {
 		return tags, "hyphen:lexicon:" + last
 	}
+	if tags, rule := NumericCandidates(last); tags != nil {
+		return tags, "hyphen:" + rule
+	}
 	if tags, rule := InflectionCandidates(last); tags != nil {
 		return tags, "hyphen:" + rule
 	}
 	if tags, rule := MorphCandidates(last, false); tags != nil {
 		return tags, "hyphen:" + rule
+	}
+	return nil, ""
+}
+
+// NumericCandidates tags numeric forms: integers, decimals, ordinals, decades,
+// and percentages. Returns nil if the word is not a numeric form.
+func NumericCandidates(word string) ([]chunky.Tag, string) {
+	lower := strings.ToLower(word)
+	if isOrdinal(lower) {
+		return []chunky.Tag{chunky.TagADJ}, "morph:ordinal"
+	}
+	if isDecade(lower) {
+		return []chunky.Tag{chunky.TagNOUN, chunky.TagNUM}, "morph:decade"
+	}
+	if isNumber(lower) {
+		return []chunky.Tag{chunky.TagNUM}, "morph:num"
+	}
+	if strings.HasSuffix(lower, "%") && isNumber(lower[:len(lower)-1]) {
+		return []chunky.Tag{chunky.TagNUM}, "morph:percent"
 	}
 	return nil, ""
 }
@@ -164,18 +191,6 @@ func MorphCandidates(word string, isFirst bool) ([]chunky.Tag, string) {
 	lower := strings.ToLower(word)
 	var rules []string
 
-	if isOrdinal(lower) {
-		return []chunky.Tag{chunky.TagADJ}, "morph:ordinal"
-	}
-	if isDecade(lower) {
-		return []chunky.Tag{chunky.TagNOUN, chunky.TagNUM}, "morph:decade"
-	}
-	if isNumber(lower) {
-		return []chunky.Tag{chunky.TagNUM}, "morph:num"
-	}
-	if strings.HasSuffix(lower, "%") && isNumber(lower[:len(lower)-1]) {
-		return []chunky.Tag{chunky.TagNUM}, "morph:percent"
-	}
 	if strings.Contains(word, "-") && word[0] >= 'A' && word[0] <= 'Z' {
 		return []chunky.Tag{chunky.TagADJ}, "morph:hyphen+caps"
 	}

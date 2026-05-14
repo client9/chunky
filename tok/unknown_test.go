@@ -51,6 +51,30 @@ func TestIsNumber(t *testing.T) {
 	}
 }
 
+func TestNumericCandidates(t *testing.T) {
+	tests := []struct {
+		word    string
+		wantTag chunky.Tag
+	}{
+		{"1st", chunky.TagADJ},
+		{"20th", chunky.TagADJ},
+		{"1980s", chunky.TagNOUN},
+		{"42", chunky.TagNUM},
+		{"3.14", chunky.TagNUM},
+		{"15%", chunky.TagNUM},
+	}
+	for _, tc := range tests {
+		tags, rule := NumericCandidates(tc.word)
+		if tags == nil {
+			t.Errorf("NumericCandidates(%q) = nil, want tags including %v", tc.word, tc.wantTag)
+			continue
+		}
+		if !hasTag(tags, tc.wantTag) {
+			t.Errorf("NumericCandidates(%q) = %v (rule=%q), want %v in result", tc.word, tags, rule, tc.wantTag)
+		}
+	}
+}
+
 func TestMorphCandidates(t *testing.T) {
 	tests := []struct {
 		word    string
@@ -58,11 +82,6 @@ func TestMorphCandidates(t *testing.T) {
 		wantTag chunky.Tag
 		wantNil bool
 	}{
-		{"1st", false, chunky.TagADJ, false},
-		{"20th", false, chunky.TagADJ, false},
-		{"1980s", false, chunky.TagNOUN, false},
-		{"42", false, chunky.TagNUM, false},
-		{"3.14", false, chunky.TagNUM, false},
 		{"London", false, chunky.TagPROPN, false},
 		{"London", true, chunky.TagUNK, true},
 		{"quickly", false, chunky.TagADV, false},
