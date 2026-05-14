@@ -96,4 +96,3 @@ func splitOneToken(out []Token, t Token) []Token {
 	}
 	return out
 }
-

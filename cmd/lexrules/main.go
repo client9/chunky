@@ -165,7 +165,10 @@ func parseLine(line string) []Token {
 	return mergeCompounds(tokens)
 }
 
-func processFile(path string, selected []struct{ Name string; Fn FeatureFunc }, counts countMap) error {
+func processFile(path string, selected []struct {
+	Name string
+	Fn   FeatureFunc
+}, counts countMap) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return err
@@ -382,14 +385,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	selected := make([]struct{ Name string; Fn FeatureFunc }, 0, len(featFlags))
+	selected := make([]struct {
+		Name string
+		Fn   FeatureFunc
+	}, 0, len(featFlags))
 	for _, name := range featFlags {
 		fn, ok := featureByName(name)
 		if !ok {
 			fmt.Fprintf(os.Stderr, "unknown feature %q\n", name)
 			os.Exit(1)
 		}
-		selected = append(selected, struct{ Name string; Fn FeatureFunc }{name, fn})
+		selected = append(selected, struct {
+			Name string
+			Fn   FeatureFunc
+		}{name, fn})
 	}
 
 	counts := make(countMap)

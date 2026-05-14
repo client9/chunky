@@ -100,7 +100,7 @@ func ParseTag(s string) (Tag, error) {
 	return TagUNK, fmt.Errorf("pos: unknown tag %q", s)
 }
 
-// converts a single Brown tag to the reduce tag set
+// TagFromBrownTag converts a single Brown tag to the reduce tag set
 func TagFromBrownTag(s string) Tag {
 
 	// if it's a foriegn word, just don't use part of speech

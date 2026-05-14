@@ -41,14 +41,13 @@ func main() {
 	outmap := make(map[string][]chunky.Tag, len(wordmap))
 	for word, btags := range wordmap {
 
-
 		// Ignore words with upper case letters.
 		// they don't belong in our lexicon - often abbreviations, and limited use proper nouns
 		// If they are "interesting" they'll also appear in lower case versions.
 		if strings.ContainsAny(word, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
 			continue
 		}
-		
+
 		// contractions and posessives don't go in
 		// lexicon dictionary.
 		if strings.Contains(word, "'") {
@@ -65,7 +64,7 @@ func main() {
 			continue
 		}
 
-		tlist := make([]chunky.Tag,0,len(btags))
+		tlist := make([]chunky.Tag, 0, len(btags))
 		for _, bt := range btags {
 			// these are slang words or contractions
 			if strings.Contains(bt, "+") {
@@ -86,8 +85,8 @@ func main() {
 			log.Printf("skipped word %q: no tags", word)
 			continue
 		}
-		
-		countTotal +=1
+
+		countTotal += 1
 		if len(tlist) == 1 {
 			countUni += 1
 		}

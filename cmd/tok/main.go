@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-//	"github.com/client9/chunky"
+	//	"github.com/client9/chunky"
 	"github.com/client9/chunky/tok"
 	"io"
-	"os"
 	"log"
+	"os"
 	"strings"
 )
 
