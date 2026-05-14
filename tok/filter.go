@@ -54,17 +54,19 @@ func MergeCompounds(tokens []Token) []Token {
 			if i+length > len(tokens) {
 				continue
 			}
-			words := make([]string, length)
+			lower := make([]string, length)
+			surface := make([]string, length)
 			for j := 0; j < length; j++ {
-				words[j] = strings.ToLower(tokens[i+j].Word)
+				lower[j] = strings.ToLower(tokens[i+j].Word)
+				surface[j] = tokens[i+j].Word
 			}
-			key := strings.Join(words, " ")
+			key := strings.Join(lower, " ")
 			if tag, ok := chunky.CompoundTags[key]; ok {
 				out = append(out, Token{
-					Word:      strings.Join(words, "_"),
-					Offset:    tokens[i].Offset,
-					Canidates: []chunky.Tag{tag},
-					Rule:      "compound",
+					Word:       strings.Join(surface, " "),
+					Offset:     tokens[i].Offset,
+					Candidates: []chunky.Tag{tag},
+					Rule:       "compound",
 				})
 				i += length
 				merged = true

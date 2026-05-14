@@ -14,16 +14,13 @@ type rawToken struct {
 	offset int
 }
 
+var tw = typewriter.New(typewriter.Config{
+	Categories: typewriter.Quotes | typewriter.Dashes | typewriter.Spaces,
+})
+
 // surfaceTokenizeRaw splits s into tokens, recording each token's byte offset
 // in the original string.
 func surfaceTokenizeRaw(s string) []rawToken {
-
-	// TODO: make a global?  It can be reused concurrently.
-    	tw := typewriter.New(typewriter.Config{
-		// Unclear what the right behavior is with other unicode symboles
-		// so start with quotes, dashes, and spaces.
-        	Categories: typewriter.Quotes | typewriter.Dashes | typewriter.Spaces,
-    	})
 
 	out := make([]rawToken, 0, 16)
 	i := 0
@@ -195,16 +192,16 @@ func SurfaceTokenize(s string) []string {
 type Token struct {
 	Word      string
 	Offset    int
-	Canidates []chunky.Tag
+	Candidates []chunky.Tag
 	Rule      string // which rule assigned the candidates
 }
 
 func (t Token) IsUnknownTag() bool {
-	return len(t.Canidates) == 0 || t.Canidates[0] == chunky.TagUNK
+	return len(t.Candidates) == 0 || t.Candidates[0] == chunky.TagUNK
 }
 
 func (t Token) HasTag(x chunky.Tag) bool {
-	for _, r := range t.Canidates {
+	for _, r := range t.Candidates {
 		if r == x {
 			return true
 		}
@@ -213,11 +210,11 @@ func (t Token) HasTag(x chunky.Tag) bool {
 }
 
 func (t Token) String() string {
-	if len(t.Canidates) == 1 {
-		return t.Word + "/" + t.Canidates[0].String()
+	if len(t.Candidates) == 1 {
+		return t.Word + "/" + t.Candidates[0].String()
 	}
-	parts := make([]string, len(t.Canidates))
-	for i, s := range t.Canidates {
+	parts := make([]string, len(t.Candidates))
+	for i, s := range t.Candidates {
 		parts[i] = s.String()
 	}
 	return t.Word + "/{" + strings.Join(parts, ",") + "}"
@@ -229,23 +226,29 @@ func TagString(s string) []Token {
 
 	for i, r := range raw {
 		lower := strings.ToLower(r.word)
-		candidates := wordtagmap[lower]
+		src := wordtagmap[lower]
 		rule := "lexicon"
-		if len(candidates) == 0 {
+		if len(src) == 0 {
 			// AbbreviationTags is the runtime-editable override layer; entries
 			// added there (e.g., contraction suffixes) don't require regenerating
 			// the compiled lexicon.
 			if tags, ok := chunky.AbbreviationTags[lower]; ok {
-				candidates = tags
+				src = tags
 			} else {
 				rule = ""
 			}
 		}
+		// Copy to avoid aliasing into the compiled lexicon slice.
+		var candidates []chunky.Tag
+		if len(src) > 0 {
+			candidates = make([]chunky.Tag, len(src))
+			copy(candidates, src)
+		}
 		out[i] = Token{
-			Word:      r.word,
-			Offset:    r.offset,
-			Canidates: candidates,
-			Rule:      rule,
+			Word:       r.word,
+			Offset:     r.offset,
+			Candidates: candidates,
+			Rule:       rule,
 		}
 	}
 	return out
@@ -623,22 +626,22 @@ func TagUnknowns(tokens []Token) []Token {
 			continue
 		}
 		if candidates, rule := InflectionCandidates(t.Word); candidates != nil {
-			tokens[i].Canidates = candidates
+			tokens[i].Candidates = candidates
 			tokens[i].Rule = rule
 			continue
 		}
 		if candidates, rule := HyphenCandidates(t.Word); candidates != nil {
-			tokens[i].Canidates = candidates
+			tokens[i].Candidates = candidates
 			tokens[i].Rule = rule
 			continue
 		}
 		if candidates, rule := MorphCandidates(t.Word, i == 0); candidates != nil {
-			tokens[i].Canidates = candidates
+			tokens[i].Candidates = candidates
 			tokens[i].Rule = rule
 			continue
 		}
 		if isAlpha(t.Word) {
-			tokens[i].Canidates = []chunky.Tag{chunky.TagNOUN}
+			tokens[i].Candidates = []chunky.Tag{chunky.TagNOUN}
 			tokens[i].Rule = "unk:word"
 		}
 	}

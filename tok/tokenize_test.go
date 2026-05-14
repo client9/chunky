@@ -223,8 +223,8 @@ func TestTagString(t *testing.T) {
 	if tokens[0].Rule != "lexicon" {
 		t.Errorf("tokens[0].Rule = %q, want 'lexicon'", tokens[0].Rule)
 	}
-	if !hasTag(tokens[0].Canidates, chunky.TagDET) {
-		t.Errorf("tokens[0] ('the') candidates = %v, want DET", tokens[0].Canidates)
+	if !hasTag(tokens[0].Candidates, chunky.TagDET) {
+		t.Errorf("tokens[0] ('the') candidates = %v, want DET", tokens[0].Candidates)
 	}
 }
 
@@ -255,8 +255,8 @@ func TestTagUnknowns(t *testing.T) {
 				continue
 			}
 			found = true
-			if !hasTag(tok.Canidates, tc.wantTag) {
-				t.Errorf("word %q in %q: candidates = %v (rule=%q), want %v", tc.word, tc.sentence, tok.Canidates, tok.Rule, tc.wantTag)
+			if !hasTag(tok.Candidates, tc.wantTag) {
+				t.Errorf("word %q in %q: candidates = %v (rule=%q), want %v", tc.word, tc.sentence, tok.Candidates, tok.Rule, tc.wantTag)
 			}
 			break
 		}
@@ -300,8 +300,8 @@ func TestContractionSplit(t *testing.T) {
 			if tokens[i].Word != w {
 				t.Errorf("TagString(%q)[%d]: word = %q, want %q", tc.input, i, tokens[i].Word, w)
 			}
-			if tc.tags[i] != 0 && !hasTag(tokens[i].Canidates, tc.tags[i]) {
-				t.Errorf("TagString(%q)[%d] %q: candidates = %v, want %v", tc.input, i, w, tokens[i].Canidates, tc.tags[i])
+			if tc.tags[i] != 0 && !hasTag(tokens[i].Candidates, tc.tags[i]) {
+				t.Errorf("TagString(%q)[%d] %q: candidates = %v, want %v", tc.input, i, w, tokens[i].Candidates, tc.tags[i])
 			}
 		}
 	}

@@ -41,15 +41,15 @@ var AbbreviationTags = map[string][]Tag{
 	"'t":  {TagADV},
 
 	// Irregular contractions kept whole (ContractionNorm handles won't/shan't split).
-	"won't": {TagAUX},
-	"wont":  {TagAUX},
-	"ain't": {TagAUX},
-	"aint":  {TagAUX},
+	"won't":  {TagAUX},
+	"wont":   {TagAUX},
+	"ain't":  {TagAUX},
+	"aint":   {TagAUX},
 	"shan't": {TagAUX},
-	"shant": {TagAUX},
-	"gonna": {TagVERB},
-	"wanna": {TagVERB},
-	"gotta": {TagVERB},
+	"shant":  {TagAUX},
+	"gonna":  {TagVERB},
+	"wanna":  {TagVERB},
+	"gotta":  {TagVERB},
 
 	// Discourse / Latin
 	"e.g":  {TagADV},

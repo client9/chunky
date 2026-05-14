@@ -36,8 +36,8 @@ func main() {
 
 		for sn, s := range sentences {
 			for _, t := range s.Tokens {
-				parts := make([]string, len(t.Canidates))
-				for i, tag := range t.Canidates {
+				parts := make([]string, len(t.Candidates))
+				for i, tag := range t.Candidates {
 					parts[i] = tag.String()
 				}
 				tags := strings.Join(parts, ", ")

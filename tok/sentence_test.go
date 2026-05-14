@@ -85,8 +85,8 @@ func TestSegmentSentenceInitialDET(t *testing.T) {
 	if first.Word != "The" {
 		t.Fatalf("expected 'The', got %q", first.Word)
 	}
-	if len(first.Canidates) != 1 || first.Canidates[0].String() != "DET" {
-		t.Errorf("'The' at sentence start: got %v, want [DET]", first.Canidates)
+	if len(first.Candidates) != 1 || first.Candidates[0].String() != "DET" {
+		t.Errorf("'The' at sentence start: got %v, want [DET]", first.Candidates)
 	}
 }
 
@@ -102,8 +102,8 @@ func TestSegmentSentenceInitialNoun(t *testing.T) {
 	if first.Word != "Hantaviruses" {
 		t.Fatalf("expected 'Hantaviruses', got %q", first.Word)
 	}
-	if len(first.Canidates) != 1 || first.Canidates[0].String() != "NOUN" {
-		t.Errorf("'Hantaviruses' at sentence start: got %v, want [NOUN]", first.Canidates)
+	if len(first.Candidates) != 1 || first.Candidates[0].String() != "NOUN" {
+		t.Errorf("'Hantaviruses' at sentence start: got %v, want [NOUN]", first.Candidates)
 	}
 }
 
@@ -119,7 +119,7 @@ func TestSegmentSentenceInitialLexiconWord(t *testing.T) {
 		t.Fatalf("expected 'Run', got %q", first.Word)
 	}
 	// "run" is in the lexicon; should NOT be promoted to PROPN
-	for _, c := range first.Canidates {
+	for _, c := range first.Candidates {
 		if c.String() == "PROPN" {
 			t.Errorf("'Run' at sentence start: got PROPN, want lexicon tag (VERB/NOUN)")
 		}
