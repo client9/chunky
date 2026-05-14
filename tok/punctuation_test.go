@@ -22,16 +22,16 @@ func TestSplitPunctuation(t *testing.T) {
 		// trailing spaces with dot: dot is split off (not an abbreviation)
 		{"Planeteers.   ", []string{"Planeteers", "."}},
 		// em dash splits into three tokens
-		{"business—Turner", []string{"business", "—", "Turner"}},
+		{"business\u2014Turner", []string{"business", "\u2014", "Turner"}},
 		// en dash splits into three tokens
-		{"1990–2000", []string{"1990", "–", "2000"}},
+		{"1990\u20132000", []string{"1990", "\u2013", "2000"}},
 		// leading/trailing em dash
-		{"—word", []string{"—", "word"}},
-		{"word—", []string{"word", "—"}},
-		// em dash with surrounding punctuation handled correctly
-		{"million—after", []string{"million", "—", "after"}},
-		// multiple dashes
-		{"a—b—c", []string{"a", "—", "b", "—", "c"}},
+		{"\u2014word", []string{"\u2014", "word"}},
+		{"word\u2014", []string{"word", "\u2014"}},
+		// em dash with surrounding words
+		{"million\u2014after", []string{"million", "\u2014", "after"}},
+		// multiple em dashes
+		{"a\u2014b\u2014c", []string{"a", "\u2014", "b", "\u2014", "c"}},
 	}
 	for _, tc := range cases {
 		tokens := SplitPunctuation(Tokenize(tc.input))
@@ -48,13 +48,13 @@ func TestSplitPunctuation(t *testing.T) {
 }
 
 func TestSplitPunctuationEmDashOffsets(t *testing.T) {
-	// "go—now" — em dash is 3 bytes (U+2014 = 0xE2 0x80 0x94)
-	tokens := SplitPunctuation(Tokenize("go—now"))
+	// "go\u2014now" -- em dash is 3 bytes (U+2014 = 0xE2 0x80 0x94)
+	tokens := SplitPunctuation(Tokenize("go\u2014now"))
 	want := []struct {
 		word   string
 		offset int
 	}{
-		{"go", 0}, {"—", 2}, {"now", 5},
+		{"go", 0}, {"\u2014", 2}, {"now", 5},
 	}
 	if len(tokens) != len(want) {
 		t.Fatalf("got %d tokens, want %d: %v", len(tokens), len(want), tokWords(tokens))
@@ -67,7 +67,7 @@ func TestSplitPunctuationEmDashOffsets(t *testing.T) {
 }
 
 func TestSplitPunctuationOffsets(t *testing.T) {
-	// "hello, world." — verify offsets of split tokens
+	// "hello, world." -- verify offsets of split tokens
 	tokens := SplitPunctuation(Tokenize("hello, world."))
 	want := []struct {
 		word   string

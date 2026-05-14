@@ -8,7 +8,7 @@ func TestNormalizeText(t *testing.T) {
 		want  string
 	}{
 		{"hello", "hello"},
-		// curly double quotes → straight ASCII quotes
+		// curly double quotes -> straight ASCII quotes
 		{"“hello”", "\"hello\""},
 	}
 	for _, tc := range cases {
@@ -29,8 +29,8 @@ func TestNormalizeTextDashes(t *testing.T) {
 		input string
 		want  string
 	}{
-		{"word—word", "word—word"},
-		{"word–word", "word–word"},
+		{"word\u2014word", "word\u2014word"},
+		{"word\u2013word", "word\u2013word"},
 	}
 	for _, tc := range cases {
 		tokens := NormalizeText(Tokenize(tc.input))

@@ -7,6 +7,12 @@ import (
 	"github.com/client9/chunky"
 )
 
+// emDash and enDash are defined as \u escapes so literal Unicode characters
+// do not appear in source and cannot be silently corrupted by editors or tools.
+const emDash = "\u2014" // \u2014
+const enDash = "\u2013" // \u2013
+const emEnDashes = "\u2014\u2013"
+
 // SplitPunctuation splits each token's leading and trailing punctuation into
 // separate tokens and expands contractions. It handles internal spaces that
 // may have been introduced by StripBrackets replacing embedded citations.
@@ -39,9 +45,9 @@ func splitOneToken(out []Token, t Token) []Token {
 		return append(out, Token{Word: p, Offset: pos})
 	}
 
-	// Split on em/en dashes (—, –) before other punctuation handling.
+	// Split on em/en dashes before other punctuation handling.
 	// These act as clause separators and must become their own tokens.
-	if idx := strings.IndexAny(p, "—–"); idx >= 0 {
+	if idx := strings.IndexAny(p, emEnDashes); idx >= 0 {
 		return splitOnDashes(out, p, pos)
 	}
 
@@ -108,7 +114,7 @@ func splitOneToken(out []Token, t Token) []Token {
 // token and recursing into splitOneToken for the surrounding word fragments.
 func splitOnDashes(out []Token, p string, pos int) []Token {
 	for {
-		idx := strings.IndexAny(p, "—–")
+		idx := strings.IndexAny(p, emEnDashes)
 		if idx < 0 {
 			if len(p) > 0 {
 				out = splitOneToken(out, Token{Word: p, Offset: pos})
