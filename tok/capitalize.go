@@ -2,9 +2,9 @@ package tok
 
 import "github.com/client9/chunky"
 
-// LexicalRetag applies context-sensitive corrections based on capitalization.
+// RetagCapitalized promotes mid-sentence capitalized known words to PROPN.
 // It runs per-sentence (inside Segment) so i==0 means sentence-initial.
-func LexicalRetag(tokens []Token) []Token {
+func RetagCapitalized(tokens []Token) []Token {
 	for i, t := range tokens {
 		if len(t.Word) == 0 || t.Word[0] < 'A' || t.Word[0] > 'Z' {
 			continue

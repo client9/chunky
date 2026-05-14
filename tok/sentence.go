@@ -75,7 +75,7 @@ func sentencePhase(tokens []Token) []Sentence {
 	return Segment(tokens)
 }
 
-// Segment splits a flat token slice into sentences. LexicalRetag is applied
+// Segment splits a flat token slice into sentences. RetagCapitalized is applied
 // per-sentence so that sentence-initial capitalized words are handled correctly.
 func Segment(tokens []Token) []Sentence {
 	if len(tokens) == 0 {
@@ -90,7 +90,7 @@ func Segment(tokens []Token) []Sentence {
 			return
 		}
 		sent := tokens[start:end]
-		sent = LexicalRetag(sent)
+		sent = RetagCapitalized(sent)
 		sentences = append(sentences, Sentence{
 			Tokens: sent,
 			Offset: sent[0].Offset,
