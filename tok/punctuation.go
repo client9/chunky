@@ -7,11 +7,7 @@ import (
 	"github.com/client9/chunky"
 )
 
-// emDash and enDash are defined as \u escapes so literal Unicode characters
-// do not appear in source and cannot be silently corrupted by editors or tools.
-const emDash = "\u2014" // \u2014
-const enDash = "\u2013" // \u2013
-const emEnDashes = "\u2014\u2013"
+const emEnDashes = "\u2014\u2013" // em dash, en dash
 
 // SplitPunctuation splits each token's leading and trailing punctuation into
 // separate tokens and expands contractions. It handles internal spaces that

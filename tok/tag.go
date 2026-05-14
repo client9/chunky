@@ -19,11 +19,15 @@ func LexicalTag(tokens []Token) []Token {
 		src := wordtagmap[lower]
 		rule := "lexicon"
 		if len(src) == 0 {
-			// AbbreviationTags is the runtime-editable override layer; entries
-			// added there (e.g. contraction suffixes) don't require regenerating
-			// the compiled lexicon.
-			if tags, ok := chunky.AbbreviationTags[lower]; ok {
+			if tags, ok := chunky.ClosedFormTags[lower]; ok {
 				src = tags
+				rule = "closed"
+			} else if tags, ok := chunky.WordTags[lower]; ok {
+				src = tags
+				rule = "words"
+			} else if tags, ok := chunky.AbbreviationTags[lower]; ok {
+				src = tags
+				rule = "abbrev"
 			} else {
 				rule = ""
 			}

@@ -6,16 +6,18 @@ package chunky
 var WordTags = map[string][]Tag{
 	// punctuation overrides — Brown corpus has noise tags on these
 	// (e.g. "," tagged FW-RB-TL, ":" tagged NP/IN)
-	",":  {TagPUNCT},
-	".":  {TagPUNCT},
-	":":  {TagPUNCT},
-	";":  {TagPUNCT},
-	"!":  {TagPUNCT},
-	"?":  {TagPUNCT},
-	"(":  {TagPUNCT},
-	")":  {TagPUNCT},
-	"-":  {TagPUNCT},
-	"--": {TagPUNCT},
+	",":      {TagPUNCT},
+	".":      {TagPUNCT},
+	":":      {TagPUNCT},
+	";":      {TagPUNCT},
+	"!":      {TagPUNCT},
+	"?":      {TagPUNCT},
+	"(":      {TagPUNCT},
+	")":      {TagPUNCT},
+	"-":      {TagPUNCT},
+	"--":     {TagPUNCT},
+	"\u2013": {TagPUNCT}, // en dash
+	"\u2014": {TagPUNCT}, // em dash
 
 	// -ede verbs: too few to justify a suffix rule, all clearly VERB
 	"accede":    {TagVERB},

@@ -19,6 +19,18 @@ func TestLexicalTag(t *testing.T) {
 	}
 }
 
+func TestLexicalTagDashes(t *testing.T) {
+	for _, word := range []string{"–", "—"} {
+		tokens := LexicalTag(Tokenize(word))
+		if len(tokens) != 1 {
+			t.Fatalf("%U: got %d tokens, want 1", []rune(word)[0], len(tokens))
+		}
+		if !hasTag(tokens[0].Tags, chunky.TagPUNCT) {
+			t.Errorf("%U: tags = %v, want PUNCT", []rune(word)[0], tokens[0].Tags)
+		}
+	}
+}
+
 func TestLexicalTagPreservesCompounds(t *testing.T) {
 	// MergeLexical sets candidates on compound tokens; LexicalTag must not overwrite them.
 	tokens := LexicalTag(chunky.MergeLexical(SplitPunctuation(NormalizeText(StripBrackets(Tokenize("such as"))))))
