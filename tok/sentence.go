@@ -70,6 +70,7 @@ func Parse(s string) []Sentence {
 	tokens = StripBrackets(tokens)
 	tokens = NormalizeText(tokens)
 	tokens = SplitPunctuation(tokens)
+	tokens = SplitContractions(tokens)
 	tokens = MergeLexical(tokens)
 	tokens = LexicalTag(tokens)
 	tokens = TagUnknowns(tokens)
