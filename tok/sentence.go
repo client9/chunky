@@ -67,6 +67,7 @@ func Parse(s string) []Sentence {
 	tokens = chunky.MergeLexical(tokens)
 	tokens = LexicalTag(tokens)
 	tokens = TagUnknowns(tokens)
+	tokens = DisambiguateApostropheS(tokens)
 	return sentencePhase(tokens)
 }
 

@@ -22,7 +22,7 @@ func TestSplitContractions(t *testing.T) {
 		{"shouldn't leave.", []string{"should", "n't", "leave", "."}, []chunky.Tag{chunky.TagAUX, chunky.TagADV, chunky.TagVERB, chunky.TagPUNCT}},
 		{"won't go.", []string{"will", "n't", "go", "."}, []chunky.Tag{chunky.TagAUX, chunky.TagADV, chunky.TagVERB, chunky.TagPUNCT}},
 		{"ain't right.", []string{"ain't", "right", "."}, []chunky.Tag{chunky.TagAUX, chunky.TagADJ, chunky.TagPUNCT}},
-		{"John's book.", []string{"John", "'s", "book", "."}, []chunky.Tag{0, chunky.TagAUX, chunky.TagNOUN, chunky.TagPUNCT}},
+		{"John's book.", []string{"John", "'s", "book", "."}, []chunky.Tag{0, chunky.TagPART, chunky.TagNOUN, chunky.TagPUNCT}},
 	}
 	for _, tc := range cases {
 		sents := Parse(tc.input)
