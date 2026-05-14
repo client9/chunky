@@ -37,7 +37,7 @@ lintverify:
 
 fmt: ## reformat source code
 	go mod tidy
-	gofmt -w -s *.go
+	gofmt -w -s .
 
 lint: ## lint and verify repo is already formatted
 	go mod tidy
