@@ -36,7 +36,7 @@ When `client9/demoji` stabilizes, emoji stripping will be added here as an addit
 
 ## 4. Punctuation splitting — `tok.SplitPunctuation`
 
-Splits leading and trailing punctuation into separate tokens and expands contractions. For each token:
+Splits leading and trailing punctuation into separate tokens. For each token:
 
 1. **Trim leading spaces** (produced by step 2 when an embedded citation started a field).
 2. **Split leading `(`** into its own token.
@@ -44,15 +44,21 @@ Splits leading and trailing punctuation into separate tokens and expands contrac
 4. **Trim trailing spaces** from what remains.
 5. **Split trailing `)`** into its own token.
 6. **Respect `DottedAbbreviations`**: if the trimmed word ending in `.` is a known abbreviation (`Dr.`, `etc.`, `U.S.`), the dot stays attached.
-7. **Expand contractions** (`splitContractions` post-pass):
-   - Irregular forms (`won't` → `will` + `n't`, `shan't` → `shall` + `n't`) via `ContractionNorm`.
-   - Words in `AbbreviationTags` not in `ContractionNorm` stay whole (`ain't`).
-   - Auxiliary suffixes (`'ll`, `'re`, `'ve`, `'m`, `'d`, `'s`) split at the apostrophe.
-   - Negating `n't`: if the stem-without-n is in the lexicon (`do`, `should`), the `n` moves to the suffix (`do` + `n't`); otherwise the `n` stays in the stem (`can` + `'t`).
 
 ---
 
-## 5. Lexical compound merging — `tok.MergeLexical`
+## 5. Contraction splitting — `tok.SplitContractions`
+
+Expands contraction tokens into (stem, suffix) pairs. No other punctuation knowledge here — this step consults the lexicon and contraction tables only.
+
+- **Irregular forms** (`won't` → `will` + `n't`, `shan't` → `shall` + `n't`) via `ContractionNorm`.
+- **Whole-word exceptions** — words in `AbbreviationTags` not in `ContractionNorm` stay whole (`ain't`, `o'clock`).
+- **Auxiliary suffixes** (`'ll`, `'re`, `'ve`, `'m`, `'d`, `'s`) split at the apostrophe.
+- **Negating `n't`**: if the stem-without-n is in the lexicon (`do`, `should`), the `n` moves to the suffix (`do` + `n't`); otherwise the `n` stays in the stem (`can` + `'t`, where `ca` is not a word).
+
+---
+
+## 6. Lexical compound merging — `tok.MergeLexical`
 
 Scans left-to-right with longest-match for entries in `CompoundTags`. Matched sequences are replaced by a single token whose `Word` is the original surface form (space-joined: `"such as"`) and whose tag is the compound's UD tag (`"such as"` → ADP, `"in order to"` → PART). Offset is taken from the first token in the sequence.
 
@@ -60,9 +66,9 @@ Runs before `LexicalTag` so that individual words in a matched compound are not 
 
 ---
 
-## 6. Lexical tagging — `tok.LexicalTag`
+## 7. Lexical tagging — `tok.LexicalTag`
 
-For each untagged token (tokens already carrying candidates, e.g. compound tokens from step 5, are skipped), looks up the lowercase form:
+For each untagged token (tokens already carrying candidates, e.g. compound tokens from step 6, are skipped), looks up the lowercase form:
 
 1. **Compiled lexicon** (`wordtagmap`, ~35k entries generated from the Brown corpus + closed forms + hand-curated overrides). Assigns an ordered candidate tag slice.
 2. **`AbbreviationTags` fallback** — runtime-editable map covering contraction suffixes (`'ll`, `n't`, …), titles, discourse abbreviations, and bibliographic forms not in the generated lexicon.
@@ -71,7 +77,7 @@ Tokens with no match in either map are left untagged (empty candidate slice).
 
 ---
 
-## 7. Unknown-word tagging — `tok.TagUnknowns`
+## 8. Unknown-word tagging — `tok.TagUnknowns`
 
 For each token still untagged, tries rules in order, stopping at the first match:
 
@@ -84,7 +90,7 @@ Numeric forms (integers, decimals, ordinals, decades) are tagged NUM by `MorphCa
 
 ---
 
-## 8. Sentence segmentation — `tok.Segment`
+## 9. Sentence segmentation — `tok.Segment`
 
 Splits the flat token stream into sentences and applies `LexicalRetag` per sentence.
 
