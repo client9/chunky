@@ -49,8 +49,8 @@ func isBoundary(tokens []Token, i int) bool {
 
 	// PROPN . PROPN → middle initial, not a boundary
 	if i > 0 && i+1 < len(tokens) &&
-		len(tokens[i-1].Tags) > 0 && tokens[i-1].Tags[0] == chunky.TagPROPN &&
-		len(tokens[i+1].Tags) > 0 && tokens[i+1].Tags[0] == chunky.TagPROPN {
+		tokens[i-1].HasTag(chunky.TagPROPN) &&
+		tokens[i+1].HasTag(chunky.TagPROPN) {
 		return false
 	}
 
@@ -99,7 +99,7 @@ func Segment(tokens []Token) []Sentence {
 	}
 
 	for i, t := range tokens {
-		if len(t.Tags) > 0 && t.Tags[0] == chunky.TagPUNCT && isBoundary(tokens, i) {
+		if t.HasTag(chunky.TagPUNCT) && isBoundary(tokens, i) {
 			flush(i + 1)
 		}
 	}
