@@ -2,6 +2,7 @@ package tok
 
 import (
 	"strings"
+	"unicode/utf8"
 
 	"github.com/client9/chunky"
 )
@@ -36,6 +37,12 @@ func splitOneToken(out []Token, t Token) []Token {
 	}
 	if len(p) == 1 {
 		return append(out, Token{Word: p, Offset: pos})
+	}
+
+	// Split on em/en dashes (—, –) before other punctuation handling.
+	// These act as clause separators and must become their own tokens.
+	if idx := strings.IndexAny(p, "—–"); idx >= 0 {
+		return splitOnDashes(out, p, pos)
 	}
 
 	// Split leading '('.
@@ -95,4 +102,25 @@ func splitOneToken(out []Token, t Token) []Token {
 		out = append(out, Token{Word: last, Offset: lastPos})
 	}
 	return out
+}
+
+// splitOnDashes splits p on em/en dash runes, emitting each dash as its own
+// token and recursing into splitOneToken for the surrounding word fragments.
+func splitOnDashes(out []Token, p string, pos int) []Token {
+	for {
+		idx := strings.IndexAny(p, "—–")
+		if idx < 0 {
+			if len(p) > 0 {
+				out = splitOneToken(out, Token{Word: p, Offset: pos})
+			}
+			return out
+		}
+		if idx > 0 {
+			out = splitOneToken(out, Token{Word: p[:idx], Offset: pos})
+		}
+		_, dashLen := utf8.DecodeRuneInString(p[idx:])
+		out = append(out, Token{Word: p[idx : idx+dashLen], Offset: pos + idx})
+		p = p[idx+dashLen:]
+		pos += idx + dashLen
+	}
 }

@@ -3,7 +3,7 @@ package tok
 import "github.com/client9/typewriter"
 
 var tw = typewriter.New(typewriter.Config{
-	Categories: typewriter.Quotes | typewriter.Dashes | typewriter.Spaces,
+	Categories: typewriter.Quotes | typewriter.Spaces,
 })
 
 // NormalizeText applies typographic normalization to each token's Word:
