@@ -11,15 +11,17 @@ import (
 	"github.com/client9/chunky"
 )
 
-// Token holds a word and its POS tag parsed from "word/TAG" format.
-type Token struct {
-	Word string
-	Tag  string
-}
-
 // FeatureFunc takes a sliding window of tokens and returns a feature key.
 // Return "" to skip this position.
-type FeatureFunc func(prev2, prev, curr, next, next2 Token) string
+type FeatureFunc func(prev2, prev, curr, next, next2 chunky.Token) string
+
+// tagStr returns the string form of a token's first tag, or "" if untagged.
+func tagStr(t chunky.Token) string {
+	if len(t.Tags) == 0 {
+		return ""
+	}
+	return t.Tags[0].String()
+}
 
 // features is the registry of all named feature templates.
 var features = []struct {
@@ -30,70 +32,70 @@ var features = []struct {
 	{
 		Name: "prevtag",
 		Desc: "previous tag → current tag distribution",
-		Fn: func(prev2, prev, curr, next, next2 Token) string {
-			return prev.Tag
+		Fn: func(prev2, prev, curr, next, next2 chunky.Token) string {
+			return tagStr(prev)
 		},
 	},
 	{
 		Name: "nexttag",
 		Desc: "next tag → current tag distribution",
-		Fn: func(prev2, prev, curr, next, next2 Token) string {
-			return next.Tag
+		Fn: func(prev2, prev, curr, next, next2 chunky.Token) string {
+			return tagStr(next)
 		},
 	},
 	{
 		Name: "prevtag+nexttag",
 		Desc: "prev+next tag sandwich → current tag distribution",
-		Fn: func(prev2, prev, curr, next, next2 Token) string {
-			return prev.Tag + "+" + next.Tag
+		Fn: func(prev2, prev, curr, next, next2 chunky.Token) string {
+			return tagStr(prev) + "+" + tagStr(next)
 		},
 	},
 	{
 		Name: "prev2tag+prevtag",
 		Desc: "trigram lookback → current tag distribution",
-		Fn: func(prev2, prev, curr, next, next2 Token) string {
-			return prev2.Tag + "+" + prev.Tag
+		Fn: func(prev2, prev, curr, next, next2 chunky.Token) string {
+			return tagStr(prev2) + "+" + tagStr(prev)
 		},
 	},
 	{
 		Name: "prevtag+nexttag+next2tag",
 		Desc: "prev + next two tags → current tag distribution",
-		Fn: func(prev2, prev, curr, next, next2 Token) string {
-			return prev.Tag + "+" + next.Tag + "+" + next2.Tag
+		Fn: func(prev2, prev, curr, next, next2 chunky.Token) string {
+			return tagStr(prev) + "+" + tagStr(next) + "+" + tagStr(next2)
 		},
 	},
 	{
 		Name: "prev2tag+prevtag+nexttag",
 		Desc: "two prev + one next (3-token window) → current tag distribution",
-		Fn: func(prev2, prev, curr, next, next2 Token) string {
-			return prev2.Tag + "+" + prev.Tag + "+" + next.Tag
+		Fn: func(prev2, prev, curr, next, next2 chunky.Token) string {
+			return tagStr(prev2) + "+" + tagStr(prev) + "+" + tagStr(next)
 		},
 	},
 	{
 		Name: "prev2tag+prevtag+nexttag+next2tag",
 		Desc: "two prev + two next (4-token window) → current tag distribution",
-		Fn: func(prev2, prev, curr, next, next2 Token) string {
-			return prev2.Tag + "+" + prev.Tag + "+" + next.Tag + "+" + next2.Tag
+		Fn: func(prev2, prev, curr, next, next2 chunky.Token) string {
+			return tagStr(prev2) + "+" + tagStr(prev) + "+" + tagStr(next) + "+" + tagStr(next2)
 		},
 	},
 	{
 		Name: "word+prevtag",
 		Desc: "word and previous tag → current tag distribution",
-		Fn: func(prev2, prev, curr, next, next2 Token) string {
-			return curr.Word + "+" + prev.Tag
+		Fn: func(prev2, prev, curr, next, next2 chunky.Token) string {
+			return curr.Word + "+" + tagStr(prev)
 		},
 	},
 	{
 		Name: "word+nexttag",
 		Desc: "word and next tag → current tag distribution",
-		Fn: func(prev2, prev, curr, next, next2 Token) string {
-			return curr.Word + "+" + next.Tag
+		Fn: func(prev2, prev, curr, next, next2 chunky.Token) string {
+			return curr.Word + "+" + tagStr(next)
 		},
 	},
 	{
 		Name: "word",
 		Desc: "word alone → tag distribution (ambiguity profile per word)",
-		Fn: func(prev2, prev, curr, next, next2 Token) string {
+		Fn: func(prev2, prev, curr, next, next2 chunky.Token) string {
 			return curr.Word
 		},
 	},
@@ -111,59 +113,8 @@ func featureByName(name string) (FeatureFunc, bool) {
 // counts[featureName][featureKey][tag] = count
 type countMap map[string]map[string]map[string]int
 
-func parseToken(s string) (Token, bool) {
-	i := strings.LastIndex(s, "/")
-	if i <= 0 || i == len(s)-1 {
-		return Token{}, false
-	}
-	return Token{Word: s[:i], Tag: s[i+1:]}, true
-}
-
-// mergeCompounds aligns corpus tokens with chunky's compound-word view so that
-// feature counts are computed over the same token boundaries that the tagger
-// uses. Parallel to tok.MergeLexical; kept separate because this package
-// operates on its own Token type parsed from "word/TAG" corpus lines.
-func mergeCompounds(tokens []Token) []Token {
-	if len(tokens) == 0 {
-		return tokens
-	}
-	out := make([]Token, 0, len(tokens))
-	i := 0
-	for i < len(tokens) {
-		merged := false
-		for length := chunky.CompoundMaxLen; length >= 2; length-- {
-			if i+length > len(tokens) {
-				continue
-			}
-			words := make([]string, length)
-			for j := 0; j < length; j++ {
-				words[j] = strings.ToLower(tokens[i+j].Word)
-			}
-			key := strings.Join(words, " ")
-			if tag, ok := chunky.CompoundTags[key]; ok {
-				out = append(out, Token{Word: strings.Join(words, " "), Tag: tag.String()})
-				i += length
-				merged = true
-				break
-			}
-		}
-		if !merged {
-			out = append(out, tokens[i])
-			i++
-		}
-	}
-	return out
-}
-
-func parseLine(line string) []Token {
-	parts := strings.Fields(line)
-	tokens := make([]Token, 0, len(parts))
-	for _, p := range parts {
-		if t, ok := parseToken(p); ok {
-			tokens = append(tokens, t)
-		}
-	}
-	return mergeCompounds(tokens)
+func parseLine(line string) []chunky.Token {
+	return chunky.MergeLexical(chunky.ParseTaggedLine(line))
 }
 
 func processFile(path string, selected []struct {
@@ -179,14 +130,14 @@ func processFile(path string, selected []struct {
 	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
 
-	var empty Token
+	var empty chunky.Token
 	for scanner.Scan() {
 		tokens := parseLine(scanner.Text())
 		if len(tokens) < 3 {
 			continue
 		}
 		for i := 1; i < len(tokens)-1; i++ {
-			var prev2, next2 Token
+			var prev2, next2 chunky.Token
 			if i >= 2 {
 				prev2 = tokens[i-2]
 			} else {
@@ -209,7 +160,7 @@ func processFile(path string, selected []struct {
 				if counts[feat.Name][key] == nil {
 					counts[feat.Name][key] = make(map[string]int)
 				}
-				counts[feat.Name][key][curr.Tag]++
+				counts[feat.Name][key][tagStr(curr)]++
 			}
 		}
 	}
@@ -236,7 +187,6 @@ func printMatrix(counts countMap, minN int) {
 	w := bufio.NewWriter(os.Stdout)
 	defer w.Flush()
 
-	// header
 	fmt.Fprintf(w, "feature,key")
 	for _, tag := range udTags {
 		fmt.Fprintf(w, ",%s", strings.ToLower(tag))

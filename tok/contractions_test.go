@@ -38,8 +38,8 @@ func TestSplitContractions(t *testing.T) {
 			if tokens[i].Word != w {
 				t.Errorf("Parse(%q)[%d]: word = %q, want %q", tc.input, i, tokens[i].Word, w)
 			}
-			if tc.tags[i] != 0 && !hasTag(tokens[i].Candidates, tc.tags[i]) {
-				t.Errorf("Parse(%q)[%d] %q: candidates = %v, want %v", tc.input, i, w, tokens[i].Candidates, tc.tags[i])
+			if tc.tags[i] != 0 && !hasTag(tokens[i].Tags, tc.tags[i]) {
+				t.Errorf("Parse(%q)[%d] %q: candidates = %v, want %v", tc.input, i, w, tokens[i].Tags, tc.tags[i])
 			}
 		}
 	}

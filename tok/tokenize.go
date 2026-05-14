@@ -1,12 +1,15 @@
 package tok
 
 import (
-	"strings"
 	"unicode"
 	"unicode/utf8"
 
 	"github.com/client9/chunky"
 )
+
+// Token and Sentence are the canonical pipeline types defined in the root package.
+type Token = chunky.Token
+type Sentence = chunky.Sentence
 
 // Tokenize splits s into tokens on Unicode whitespace, recording each token's
 // byte offset into the original string. No normalization, filtering, or tagging
@@ -48,37 +51,4 @@ func SurfaceTokenize(s string) []string {
 		out[i] = t.Word
 	}
 	return out
-}
-
-// Token is a single word-like unit with its byte offset in the original source
-// string and an ordered candidate tag set.
-type Token struct {
-	Word       string
-	Offset     int
-	Candidates []chunky.Tag
-	Rule       string
-}
-
-func (t Token) IsUnknownTag() bool {
-	return len(t.Candidates) == 0 || t.Candidates[0] == chunky.TagUNK
-}
-
-func (t Token) HasTag(x chunky.Tag) bool {
-	for _, r := range t.Candidates {
-		if r == x {
-			return true
-		}
-	}
-	return false
-}
-
-func (t Token) String() string {
-	if len(t.Candidates) == 1 {
-		return t.Word + "/" + t.Candidates[0].String()
-	}
-	parts := make([]string, len(t.Candidates))
-	for i, s := range t.Candidates {
-		parts[i] = s.String()
-	}
-	return t.Word + "/{" + strings.Join(parts, ",") + "}"
 }

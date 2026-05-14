@@ -57,8 +57,8 @@ func TestSegmentSentenceInitialDET(t *testing.T) {
 	if first.Word != "The" {
 		t.Fatalf("expected 'The', got %q", first.Word)
 	}
-	if len(first.Candidates) != 1 || first.Candidates[0].String() != "DET" {
-		t.Errorf("'The' at sentence start: got %v, want [DET]", first.Candidates)
+	if len(first.Tags) != 1 || first.Tags[0].String() != "DET" {
+		t.Errorf("'The' at sentence start: got %v, want [DET]", first.Tags)
 	}
 }
 
@@ -71,8 +71,8 @@ func TestSegmentSentenceInitialNoun(t *testing.T) {
 	if first.Word != "Hantaviruses" {
 		t.Fatalf("expected 'Hantaviruses', got %q", first.Word)
 	}
-	if len(first.Candidates) != 1 || first.Candidates[0].String() != "NOUN" {
-		t.Errorf("'Hantaviruses' at sentence start: got %v, want [NOUN]", first.Candidates)
+	if len(first.Tags) != 1 || first.Tags[0].String() != "NOUN" {
+		t.Errorf("'Hantaviruses' at sentence start: got %v, want [NOUN]", first.Tags)
 	}
 }
 
@@ -85,7 +85,7 @@ func TestSegmentSentenceInitialLexiconWord(t *testing.T) {
 	if first.Word != "Run" {
 		t.Fatalf("expected 'Run', got %q", first.Word)
 	}
-	for _, c := range first.Candidates {
+	for _, c := range first.Tags {
 		if c.String() == "PROPN" {
 			t.Errorf("'Run' at sentence start: got PROPN, want lexicon tag (VERB/NOUN)")
 		}

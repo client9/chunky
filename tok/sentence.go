@@ -6,13 +6,6 @@ import (
 	"github.com/client9/chunky"
 )
 
-// Sentence is a sequence of tokens forming a single sentence, with the byte
-// offset of the first token in the original source string.
-type Sentence struct {
-	Tokens []Token
-	Offset int
-}
-
 // isAbbrevToken returns true if t is a known abbreviation that should not
 // trigger a sentence boundary when followed by a period.
 func isAbbrevToken(t Token) bool {
@@ -56,8 +49,8 @@ func isBoundary(tokens []Token, i int) bool {
 
 	// PROPN . PROPN → middle initial, not a boundary
 	if i > 0 && i+1 < len(tokens) &&
-		len(tokens[i-1].Candidates) > 0 && tokens[i-1].Candidates[0] == chunky.TagPROPN &&
-		len(tokens[i+1].Candidates) > 0 && tokens[i+1].Candidates[0] == chunky.TagPROPN {
+		len(tokens[i-1].Tags) > 0 && tokens[i-1].Tags[0] == chunky.TagPROPN &&
+		len(tokens[i+1].Tags) > 0 && tokens[i+1].Tags[0] == chunky.TagPROPN {
 		return false
 	}
 
@@ -71,7 +64,7 @@ func Parse(s string) []Sentence {
 	tokens = NormalizeText(tokens)
 	tokens = SplitPunctuation(tokens)
 	tokens = SplitContractions(tokens)
-	tokens = MergeLexical(tokens)
+	tokens = chunky.MergeLexical(tokens)
 	tokens = LexicalTag(tokens)
 	tokens = TagUnknowns(tokens)
 	return sentencePhase(tokens)
@@ -96,7 +89,6 @@ func Segment(tokens []Token) []Sentence {
 			return
 		}
 		sent := tokens[start:end]
-		// apply LexicalRetag per-sentence so i==0 is correctly sentence-initial
 		sent = LexicalRetag(sent)
 		sentences = append(sentences, Sentence{
 			Tokens: sent,
@@ -106,11 +98,11 @@ func Segment(tokens []Token) []Sentence {
 	}
 
 	for i, t := range tokens {
-		if len(t.Candidates) > 0 && t.Candidates[0] == chunky.TagPUNCT && isBoundary(tokens, i) {
+		if len(t.Tags) > 0 && t.Tags[0] == chunky.TagPUNCT && isBoundary(tokens, i) {
 			flush(i + 1)
 		}
 	}
-	flush(len(tokens)) // trailing sentence with no terminal punctuation
+	flush(len(tokens))
 
 	return sentences
 }

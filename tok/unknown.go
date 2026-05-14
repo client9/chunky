@@ -15,27 +15,27 @@ func TagUnknowns(tokens []Token) []Token {
 			continue
 		}
 		if candidates, rule := NumericCandidates(t.Word); candidates != nil {
-			tokens[i].Candidates = candidates
+			tokens[i].Tags = candidates
 			tokens[i].Rule = rule
 			continue
 		}
 		if candidates, rule := InflectionCandidates(t.Word); candidates != nil {
-			tokens[i].Candidates = candidates
+			tokens[i].Tags = candidates
 			tokens[i].Rule = rule
 			continue
 		}
 		if candidates, rule := HyphenCandidates(t.Word); candidates != nil {
-			tokens[i].Candidates = candidates
+			tokens[i].Tags = candidates
 			tokens[i].Rule = rule
 			continue
 		}
 		if candidates, rule := MorphCandidates(t.Word, i == 0); candidates != nil {
-			tokens[i].Candidates = candidates
+			tokens[i].Tags = candidates
 			tokens[i].Rule = rule
 			continue
 		}
 		if isAlpha(t.Word) {
-			tokens[i].Candidates = []chunky.Tag{chunky.TagNOUN}
+			tokens[i].Tags = []chunky.Tag{chunky.TagNOUN}
 			tokens[i].Rule = "unk:word"
 		}
 	}

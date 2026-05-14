@@ -18,8 +18,8 @@ func LexicalRetag(tokens []Token) []Token {
 		}
 		// Non-sentence-initial: any known capitalized word → PROPN,
 		// except PRON ("I" is always capitalized in English).
-		if !t.IsUnknownTag() && t.Candidates[0] != chunky.TagPRON {
-			tokens[i].Candidates = []chunky.Tag{chunky.TagPROPN}
+		if !t.IsUnknownTag() && t.Tags[0] != chunky.TagPRON {
+			tokens[i].Tags = []chunky.Tag{chunky.TagPROPN}
 			tokens[i].Rule = t.Rule + "+caps"
 		}
 	}

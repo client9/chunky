@@ -1,13 +1,9 @@
-package tok
+package chunky
 
-import (
-	"strings"
-
-	"github.com/client9/chunky"
-)
+import "strings"
 
 // MergeLexical scans the token stream left-to-right and replaces sequences
-// matching chunky.CompoundTags with a single token carrying the compound tag.
+// matching CompoundTags with a single token carrying the compound tag.
 // Longest match wins. The merged token's Word is the original surface form
 // (space-joined), and its Offset is taken from the first token in the sequence.
 func MergeLexical(tokens []Token) []Token {
@@ -18,7 +14,7 @@ func MergeLexical(tokens []Token) []Token {
 	i := 0
 	for i < len(tokens) {
 		merged := false
-		for length := chunky.CompoundMaxLen; length >= 2; length-- {
+		for length := CompoundMaxLen; length >= 2; length-- {
 			if i+length > len(tokens) {
 				continue
 			}
@@ -29,12 +25,12 @@ func MergeLexical(tokens []Token) []Token {
 				surface[j] = tokens[i+j].Word
 			}
 			key := strings.Join(lower, " ")
-			if tag, ok := chunky.CompoundTags[key]; ok {
+			if tag, ok := CompoundTags[key]; ok {
 				out = append(out, Token{
-					Word:       strings.Join(surface, " "),
-					Offset:     tokens[i].Offset,
-					Candidates: []chunky.Tag{tag},
-					Rule:       "compound",
+					Word:   strings.Join(surface, " "),
+					Offset: tokens[i].Offset,
+					Tags:   []Tag{tag},
+					Rule:   "compound",
 				})
 				i += length
 				merged = true

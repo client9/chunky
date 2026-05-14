@@ -195,8 +195,8 @@ func TestTagUnknowns(t *testing.T) {
 				continue
 			}
 			found = true
-			if !hasTag(tok.Candidates, tc.wantTag) {
-				t.Errorf("word %q in %q: candidates = %v (rule=%q), want %v", tc.word, tc.sentence, tok.Candidates, tok.Rule, tc.wantTag)
+			if !hasTag(tok.Tags, tc.wantTag) {
+				t.Errorf("word %q in %q: candidates = %v (rule=%q), want %v", tc.word, tc.sentence, tok.Tags, tok.Rule, tc.wantTag)
 			}
 			break
 		}
