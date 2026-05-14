@@ -92,7 +92,7 @@ Numeric forms (integers, decimals, ordinals, decades) are tagged NUM by `MorphCa
 
 ## 9. Sentence segmentation — `tok.Segment`
 
-Splits the flat token stream into sentences and applies `LexicalRetag` per sentence.
+Splits the flat token stream into sentences and applies `RetagCapitalized` per sentence.
 
 **Boundary detection** (`isBoundary`): a `.` `!` or `?` token is a sentence boundary unless:
 - It is part of an ellipsis (adjacent `.` token).
@@ -100,7 +100,7 @@ Splits the flat token stream into sentences and applies `LexicalRetag` per sente
 - It follows a single uppercase letter (middle initial).
 - It sits between two PROPN tokens (PROPN `.` PROPN pattern for initials).
 
-**`LexicalRetag`** runs on each sentence independently so that `i == 0` correctly identifies the sentence-initial token:
+**`RetagCapitalized`** runs on each sentence independently so that `i == 0` correctly identifies the sentence-initial token:
 - **`i == 0`** (sentence-initial): no change. Grammatical capitalization provides no information about the tag.
 - **`i > 0`**, capitalized, known tag, not PRON: promote to PROPN. Handles proper nouns, Roman numerals, and initials that appear mid-sentence.
 
