@@ -119,9 +119,10 @@ func parseToken(s string) (Token, bool) {
 	return Token{Word: s[:i], Tag: s[i+1:]}, true
 }
 
-// mergeCompounds scans tokens left-to-right and replaces matching word
-// sequences from chunky.CompoundTags with a single merged token.
-// Longest match wins. The merged word is underscore-joined lowercase.
+// mergeCompounds aligns corpus tokens with chunky's compound-word view so that
+// feature counts are computed over the same token boundaries that the tagger
+// uses. Parallel to tok.MergeLexical; kept separate because this package
+// operates on its own Token type parsed from "word/TAG" corpus lines.
 func mergeCompounds(tokens []Token) []Token {
 	if len(tokens) == 0 {
 		return tokens
@@ -140,7 +141,7 @@ func mergeCompounds(tokens []Token) []Token {
 			}
 			key := strings.Join(words, " ")
 			if tag, ok := chunky.CompoundTags[key]; ok {
-				out = append(out, Token{Word: strings.Join(words, "_"), Tag: tag.String()})
+				out = append(out, Token{Word: strings.Join(words, " "), Tag: tag.String()})
 				i += length
 				merged = true
 				break
