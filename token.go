@@ -13,6 +13,7 @@ type Token struct {
 	Offset int
 	Tags   []Tag
 	Rule   string
+	Chunk  ChunkTag
 }
 
 // Sentence is an ordered slice of tokens forming a single sentence, with

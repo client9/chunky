@@ -29,6 +29,9 @@ closed.go: cmd/closedforms/main.go ## generate closed form list
 clean: ## clean
 	rm -f data/brown-reduced.json
 
+eval: ## score chunker against CoNLL-2000 test set
+	go run ./cmd/eval-chunks data/conll2000-test.txt
+
 test: ## tests
 	go test ./...
 
