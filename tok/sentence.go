@@ -69,12 +69,15 @@ func Parse(s string) []Sentence {
 	tokens = TagUnknowns(tokens)
 	tokens = DisambiguateApostropheS(tokens)
 	tokens = DisambiguateThere(tokens)
+	tokens = DisambiguateMay(tokens)
+	tokens = DisambiguateThat(tokens)
 	return sentencePhase(tokens)
 }
 
 func sentencePhase(tokens []Token) []Sentence {
 	sents := Segment(tokens)
 	for i := range sents {
+		sents[i].Tokens = RetagMay(sents[i].Tokens)
 		sents[i].Tokens = DisambiguateContext(sents[i].Tokens)
 	}
 	return sents

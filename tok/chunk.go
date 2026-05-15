@@ -50,7 +50,7 @@ func isInfinitival(tokens []Token, i int) bool {
 	if i+1 >= len(tokens) || len(tokens[i+1].Tags) == 0 {
 		return false
 	}
-	return tokens[i+1].Tags[0] == chunky.TagVERB
+	return tokens[i+1].HasTag(chunky.TagVERB)
 }
 
 func markNP(tokens []Token, start int) int {
@@ -88,6 +88,7 @@ func markVP(tokens []Token, start int) int {
 // isVPCont returns true if the token at i can continue (I-VP) a verb phrase.
 // ADV, PART, and infinitival ADP "to" only extend a VP when a verbal token
 // follows — a trailing negation particle or bare adverb does not stay inside.
+// NOUN/VERB ambiguous tokens are treated as verbal when inside an active VP.
 func isVPCont(tokens []Token, i int) bool {
 	if i >= len(tokens) || len(tokens[i].Tags) == 0 {
 		return false
@@ -96,6 +97,8 @@ func isVPCont(tokens []Token, i int) bool {
 	switch tok.Tags[0] {
 	case chunky.TagAUX, chunky.TagVERB:
 		return true
+	case chunky.TagNOUN, chunky.TagADJ:
+		return tok.HasTag(chunky.TagVERB)
 	case chunky.TagADV:
 		// "n't" / "not" are always O in CoNLL-2000, never inside VP.
 		if tok.Word == "n't" || tok.Word == "not" {
