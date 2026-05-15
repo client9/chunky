@@ -47,6 +47,35 @@ func matchSlot(want chunky.Tag, tok Token, active bool) bool {
 	return len(tok.Tags) == 1 && tok.Tags[0] == want
 }
 
+// CopyTags returns a snapshot of the Tags slice of each token, for change detection.
+func CopyTags(tokens []Token) [][]chunky.Tag {
+	out := make([][]chunky.Tag, len(tokens))
+	for i, t := range tokens {
+		cp := make([]chunky.Tag, len(t.Tags))
+		copy(cp, t.Tags)
+		out[i] = cp
+	}
+	return out
+}
+
+// TagsEqual reports whether tokens have the same Tags as the snapshot produced by CopyTags.
+func TagsEqual(tokens []Token, snap [][]chunky.Tag) bool {
+	if len(tokens) != len(snap) {
+		return false
+	}
+	for i, t := range tokens {
+		if len(t.Tags) != len(snap[i]) {
+			return false
+		}
+		for j, tag := range t.Tags {
+			if tag != snap[i][j] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // applyRules makes one left-to-right pass, firing the first matching rule for
 // each ambiguous token. Returns true if any token changed.
 func applyRules(tokens []Token, rules []ContextRule) bool {

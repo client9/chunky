@@ -78,7 +78,16 @@ func sentencePhase(tokens []Token) []Sentence {
 	sents := Segment(tokens)
 	for i := range sents {
 		sents[i].Tokens = RetagMay(sents[i].Tokens)
-		sents[i].Tokens = DisambiguateContext(sents[i].Tokens)
+		for {
+			prev := CopyTags(sents[i].Tokens)
+			sents[i].Tokens = DisambiguateContext(sents[i].Tokens)
+			sents[i].Tokens = Chunk(sents[i].Tokens)
+			sents[i].Tokens = DisambiguateByChunk(sents[i].Tokens)
+			if TagsEqual(sents[i].Tokens, prev) {
+				break
+			}
+		}
+		sents[i].Tokens = Chunk(sents[i].Tokens)
 	}
 	return sents
 }

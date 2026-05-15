@@ -6,10 +6,9 @@ import "github.com/client9/chunky"
 // It runs after an initial Chunk() pass and resolves residual ambiguities
 // where the chunk position is a reliable signal:
 //
-//   - NOUN/VERB inside a VP chunk → VERB
-//   - NOUN/VERB inside an NP chunk → NOUN
-//   - ADJ/VERB  inside a VP chunk → VERB
-//   - ADJ/VERB  inside an NP chunk → ADJ
+//   - NOUN/VERB inside a VP → VERB; inside an NP → NOUN
+//   - ADJ/VERB  inside a VP → VERB; inside an NP → ADJ
+//   - ADP/PART  inside a VP → PART (infinitival "to")
 func DisambiguateByChunk(tokens []Token) []Token {
 	for i, tok := range tokens {
 		if len(tok.Tags) <= 1 {
@@ -34,6 +33,11 @@ func DisambiguateByChunk(tokens []Token) []Token {
 				tokens[i].Rule = tok.Rule + "+chunk"
 			} else if kind == chunky.ChunkNP {
 				tokens[i].Tags = []chunky.Tag{chunky.TagADJ}
+				tokens[i].Rule = tok.Rule + "+chunk"
+			}
+		case tok.HasTag(chunky.TagADP) && tok.HasTag(chunky.TagPART):
+			if kind == chunky.ChunkVP {
+				tokens[i].Tags = []chunky.Tag{chunky.TagPART}
 				tokens[i].Rule = tok.Rule + "+chunk"
 			}
 		}

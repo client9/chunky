@@ -107,6 +107,18 @@ func InflectionCandidates(word string) ([]chunky.Tag, string) {
 	if len(seen) == 0 {
 		return nil, ""
 	}
+	// Inflectional suffixes only produce open-class words. Strip closed-class
+	// tags that crept in via false stem matches (e.g. "them" from "themed").
+	for _, closed := range []chunky.Tag{
+		chunky.TagPRON, chunky.TagDET, chunky.TagADP, chunky.TagAUX,
+		chunky.TagSCONJ, chunky.TagCCONJ, chunky.TagPART, chunky.TagPUNCT,
+		chunky.TagINTJ, chunky.TagSYM,
+	} {
+		delete(seen, closed)
+	}
+	if len(seen) == 0 {
+		return nil, ""
+	}
 	out := make([]chunky.Tag, 0, len(seen))
 	for t := range seen {
 		out = append(out, t)
@@ -121,6 +133,20 @@ var hyphenAdjSuffixes = map[string]bool{
 	"wide": true,
 }
 
+// isCompoundAdj reports whether the last component of a hyphenated word
+// signals a compound adjective. Past participles ("themed", "based",
+// "minded") and present participles ("facing", "looking") in compound
+// position are reliably adjectival ("evidence-based", "forward-looking").
+func isCompoundAdj(last string) bool {
+	if len(last) > 3 && strings.HasSuffix(last, "ed") {
+		return true
+	}
+	if len(last) > 4 && strings.HasSuffix(last, "ing") {
+		return true
+	}
+	return false
+}
+
 // HyphenCandidates handles hyphenated compounds by looking up the last
 // component in the lexicon and applying morph rules as a fallback.
 func HyphenCandidates(word string) ([]chunky.Tag, string) {
@@ -132,6 +158,9 @@ func HyphenCandidates(word string) ([]chunky.Tag, string) {
 
 	if hyphenAdjSuffixes[last] {
 		return []chunky.Tag{chunky.TagADJ}, "hyphen:adj-suffix:" + last
+	}
+	if isCompoundAdj(last) {
+		return []chunky.Tag{chunky.TagADJ}, "hyphen:compound-participle"
 	}
 	if tags, ok := wordtagmap[last]; ok {
 		return tags, "hyphen:lexicon:" + last
