@@ -8,8 +8,11 @@ help:
 build: ## build module and CLI
 	go build ./...
 
-tok/rules_gen.go: rules.db rules.sh cmd/mkreules/main.go ## regenerate context disambiguation rules from corpus statistics
-	bash rules.sh | go run ./cmd/mkreules -tag1 NOUN -tag2 VERB > tok/rules_gen.go
+tok/rules_nounverb_gen.go tok/rules_adjnoun_gen.go tok/rules_adppart_gen.go tok/rules_auxverb_gen.go: rules.db rules.sh cmd/mkrules/main.go ## regenerate context disambiguation rules from corpus statistics
+	F1=NOUN F2=VERB              bash rules.sh | go run ./cmd/mkrules -tag1 NOUN -tag2 VERB -var nounVerbRules > tok/rules_nounverb_gen.go
+	F1=ADJ  F2=NOUN RATIO=20     bash rules.sh | go run ./cmd/mkrules -tag1 ADJ  -tag2 NOUN -var adjNounRules  > tok/rules_adjnoun_gen.go
+	F1=ADP  F2=PART              bash rules.sh | go run ./cmd/mkrules -tag1 ADP  -tag2 PART -var adpPartRules  > tok/rules_adppart_gen.go
+	F1=AUX  F2=VERB              bash rules.sh | go run ./cmd/mkrules -tag1 AUX  -tag2 VERB -var auxVerbRules  > tok/rules_auxverb_gen.go
 
 tok/lexicon_gen.go: data/brown-penn-nltk.json cmd/brown-remap/main.go closed.go words.go ## generate compiled-in lexicon for tok package
 	go run ./cmd/brown-remap/ -go < data/brown-penn-nltk.json > tok/lexicon_gen.go 2>/dev/null
