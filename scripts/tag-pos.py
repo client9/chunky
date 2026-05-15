@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Read a JSONL file produced by fetch-wiki-dump.py and emit a plain-text
-POS-tagged corpus: one sentence per line, each token tagged word/TAG.
+Read a JSONL file produced by fetch-wiki-dump.py and emit a JSONL POS-tagged corpus.
 
-Example:
-  The/DET dog/NOUN runs/VERB ./PUNCT
+Output format (one JSON object per line):
+  Line 1 (header): {"type": "header", "spacy_model": "...", "date": "..."}
+  Remaining lines: {"title": "...", "sentences": ["word/TAG word/TAG ...", ...]}
 
 Output filename is derived from the source filename, e.g.:
-  enwiki-20260401-multistream1.pos.txt
+  enwiki-20260401-multistream1.pos.jsonl
 
 Usage:
   python3 scripts/tag-pos.py --file data/enwiki-20260401-multistream1.jsonl
@@ -16,8 +16,8 @@ Usage:
 
 import argparse
 import json
-import re
 import sys
+from datetime import date
 from pathlib import Path
 
 import spacy
@@ -27,7 +27,7 @@ def output_path(source_path, data_dir=None):
     p = Path(source_path)
     stem = p.stem  # strips one suffix (.jsonl → base name)
     out_dir = Path(data_dir) if data_dir else p.parent
-    return out_dir / f"{stem}.pos.txt"
+    return out_dir / f"{stem}.pos.jsonl"
 
 
 def main():
@@ -57,16 +57,21 @@ def main():
     count = 0
     sent_count = 0
     with open(src) as fin, open(out, "w") as fout:
+        header = {"type": "header", "spacy_model": args.model, "date": date.today().isoformat()}
+        fout.write(json.dumps(header) + "\n")
+
         for line in fin:
             line = line.strip()
             if not line:
                 continue
             record = json.loads(line)
+            title = record.get("title", "")
             text = record.get("extract", "")
             if not text:
                 continue
 
             doc = nlp(text)
+            sentences = []
             for sent in doc.sents:
                 tokens = [
                     f"{tok.text}/{tok.pos_}"
@@ -74,8 +79,11 @@ def main():
                     if not tok.is_space
                 ]
                 if tokens:
-                    fout.write(" ".join(tokens) + "\n")
+                    sentences.append(" ".join(tokens))
                     sent_count += 1
+
+            if sentences:
+                fout.write(json.dumps({"title": title, "sentences": sentences}) + "\n")
 
             count += 1
             if count % 1000 == 0:

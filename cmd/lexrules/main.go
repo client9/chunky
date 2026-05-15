@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -132,35 +133,44 @@ func processFile(path string, selected []struct {
 
 	var empty chunky.Token
 	for scanner.Scan() {
-		tokens := parseLine(scanner.Text())
-		if len(tokens) < 3 {
+		var rec struct {
+			Type      string   `json:"type"`
+			Sentences []string `json:"sentences"`
+		}
+		if err := json.Unmarshal([]byte(scanner.Text()), &rec); err != nil || rec.Type == "header" {
 			continue
 		}
-		for i := 1; i < len(tokens)-1; i++ {
-			var prev2, next2 chunky.Token
-			if i >= 2 {
-				prev2 = tokens[i-2]
-			} else {
-				prev2 = empty
+		for _, tagged := range rec.Sentences {
+			tokens := parseLine(tagged)
+			if len(tokens) < 3 {
+				continue
 			}
-			if i+2 < len(tokens) {
-				next2 = tokens[i+2]
-			} else {
-				next2 = empty
-			}
-			prev, curr, next := tokens[i-1], tokens[i], tokens[i+1]
-			for _, feat := range selected {
-				key := feat.Fn(prev2, prev, curr, next, next2)
-				if key == "" {
-					continue
+			for i := 1; i < len(tokens)-1; i++ {
+				var prev2, next2 chunky.Token
+				if i >= 2 {
+					prev2 = tokens[i-2]
+				} else {
+					prev2 = empty
 				}
-				if counts[feat.Name] == nil {
-					counts[feat.Name] = make(map[string]map[string]int)
+				if i+2 < len(tokens) {
+					next2 = tokens[i+2]
+				} else {
+					next2 = empty
 				}
-				if counts[feat.Name][key] == nil {
-					counts[feat.Name][key] = make(map[string]int)
+				prev, curr, next := tokens[i-1], tokens[i], tokens[i+1]
+				for _, feat := range selected {
+					key := feat.Fn(prev2, prev, curr, next, next2)
+					if key == "" {
+						continue
+					}
+					if counts[feat.Name] == nil {
+						counts[feat.Name] = make(map[string]map[string]int)
+					}
+					if counts[feat.Name][key] == nil {
+						counts[feat.Name][key] = make(map[string]int)
+					}
+					counts[feat.Name][key][tagStr(curr)]++
 				}
-				counts[feat.Name][key][tagStr(curr)]++
 			}
 		}
 	}

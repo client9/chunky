@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -42,17 +43,26 @@ func main() {
 		scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
 
 		for scanner.Scan() {
-			sentence := stripTags(scanner.Text())
-			if sentence == "" {
+			var rec struct {
+				Type      string   `json:"type"`
+				Sentences []string `json:"sentences"`
+			}
+			if err := json.Unmarshal([]byte(scanner.Text()), &rec); err != nil || rec.Type == "header" {
 				continue
 			}
-			var tokens []tok.Token
-			for _, s := range tok.Parse(sentence) {
-				tokens = append(tokens, s.Tokens...)
-			}
-			for _, t := range tokens {
-				if t.IsUnknownTag() {
-					freq[t.Word]++
+			for _, tagged := range rec.Sentences {
+				sentence := stripTags(tagged)
+				if sentence == "" {
+					continue
+				}
+				var tokens []tok.Token
+				for _, s := range tok.Parse(sentence) {
+					tokens = append(tokens, s.Tokens...)
+				}
+				for _, t := range tokens {
+					if t.IsUnknownTag() {
+						freq[t.Word]++
+					}
 				}
 			}
 		}
