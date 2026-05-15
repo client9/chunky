@@ -47,8 +47,25 @@ func splitOneToken(out []Token, t Token) []Token {
 		return splitOnDashes(out, p, pos)
 	}
 
+	// Strip leading hyphens (-, --, --- etc.) as a separate token.
+	// These are ASCII double-hyphen em-dash artifacts that weren't caught by
+	// the Unicode em/en dash path above.
+	// Exception: don't split negative numbers (-42, -1.5).
+	if p[0] == '-' {
+		i := 0
+		for i < len(p) && p[i] == '-' {
+			i++
+		}
+		if i < len(p) && (p[i] < '0' || p[i] > '9') { // hyphens followed by non-digit content
+			out = append(out, Token{Word: p[:i], Offset: pos})
+			p = p[i:]
+			pos += i
+		}
+		// bare hyphens or negative numbers: fall through and emit as-is
+	}
+
 	// Split leading '('.
-	if p[0] == '(' {
+	if len(p) > 0 && p[0] == '(' {
 		out = append(out, Token{Word: "(", Offset: pos})
 		p = p[1:]
 		pos++

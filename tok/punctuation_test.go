@@ -32,6 +32,17 @@ func TestSplitPunctuation(t *testing.T) {
 		{"million\u2014after", []string{"million", "\u2014", "after"}},
 		// multiple em dashes
 		{"a\u2014b\u2014c", []string{"a", "\u2014", "b", "\u2014", "c"}},
+		// leading ASCII hyphens split off as a separate token
+		{"-one", []string{"-", "one"}},
+		{"--one", []string{"--", "one"}},
+		{"---one", []string{"---", "one"}},
+		// leading hyphens plus trailing punctuation
+		{"--word,", []string{"--", "word", ","}},
+		// bare hyphens (no word after) pass through as-is
+		{"-", []string{"-"}},
+		{"--", []string{"--"}},
+		// leading hyphen not confused with negative number (handled by NumericCandidates, not here)
+		{"-42", []string{"-42"}},
 	}
 	for _, tc := range cases {
 		tokens := SplitPunctuation(Tokenize(tc.input))
