@@ -68,6 +68,7 @@ func Parse(s string) []Sentence {
 	tokens = LexicalTag(tokens)
 	tokens = TagUnknowns(tokens)
 	tokens = DisambiguateApostropheS(tokens)
+	tokens = DisambiguateThere(tokens)
 	return sentencePhase(tokens)
 }
 
