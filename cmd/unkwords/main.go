@@ -31,6 +31,7 @@ func main() {
 	}
 
 	freq := make(map[string]int)
+	spacyTags := make(map[string]map[string]int) // word → spaCy tag → count
 
 	for _, path := range os.Args[1:] {
 		f, err := os.Open(path)
@@ -51,6 +52,15 @@ func main() {
 				continue
 			}
 			for _, tagged := range rec.Sentences {
+				// Build word→tag lookup from spaCy's tokenization for this sentence.
+				spacyForSent := make(map[string]string)
+				for _, part := range strings.Fields(tagged) {
+					i := strings.LastIndex(part, "/")
+					if i > 0 {
+						spacyForSent[part[:i]] = part[i+1:]
+					}
+				}
+
 				sentence := stripTags(tagged)
 				if sentence == "" {
 					continue
@@ -62,6 +72,12 @@ func main() {
 				for _, t := range tokens {
 					if t.IsUnknownTag() {
 						freq[t.Word]++
+						if tag, ok := spacyForSent[t.Word]; ok {
+							if spacyTags[t.Word] == nil {
+								spacyTags[t.Word] = make(map[string]int)
+							}
+							spacyTags[t.Word][tag]++
+						}
 					}
 				}
 			}
@@ -91,6 +107,27 @@ func main() {
 	})
 
 	for i, w := range wf {
-		fmt.Printf("%6d. %6d  %s\n", i+1, w.Count, w.Word)
+		// Format spaCy tags sorted by descending count.
+		tagCounts := spacyTags[w.Word]
+		type tagFreq struct {
+			Tag   string
+			Count int
+		}
+		tf := make([]tagFreq, 0, len(tagCounts))
+		for tag, n := range tagCounts {
+			tf = append(tf, tagFreq{tag, n})
+		}
+		sort.Slice(tf, func(a, b int) bool {
+			if tf[a].Count != tf[b].Count {
+				return tf[a].Count > tf[b].Count
+			}
+			return tf[a].Tag < tf[b].Tag
+		})
+		parts := make([]string, len(tf))
+		for j, t := range tf {
+			parts[j] = fmt.Sprintf("%s:%d", t.Tag, t.Count)
+		}
+		spacyStr := strings.Join(parts, " ")
+		fmt.Printf("%6d. %6d  %-30s  %s\n", i+1, w.Count, w.Word, spacyStr)
 	}
 }
