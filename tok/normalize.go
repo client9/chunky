@@ -7,7 +7,7 @@ var tw = typewriter.New(typewriter.Config{
 })
 
 // NormalizeText applies typographic normalization to each token's Word:
-// curly quotes → straight, em/en dashes → ASCII, Unicode spaces → space.
+// curly quotes → straight, Unicode spaces → space.
 // Runs after StripBrackets and before SplitPunctuation so that multi-character
 // sequences (-- → —, curly quote pairs) are recognized on whole fields before
 // punctuation is split off.
