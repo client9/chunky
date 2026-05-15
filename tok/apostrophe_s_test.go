@@ -6,6 +6,21 @@ import (
 	"github.com/client9/chunky"
 )
 
+// tagOf returns the resolved tag of the first token in sents whose Word matches word.
+func tagOf(sents []Sentence, word string) (chunky.Tag, bool) {
+	for _, s := range sents {
+		for _, tok := range s.Tokens {
+			if tok.Word == word {
+				if len(tok.Tags) == 1 {
+					return tok.Tags[0], true
+				}
+				return 0, false // ambiguous
+			}
+		}
+	}
+	return 0, false // not found
+}
+
 func TestDisambiguateApostropheS(t *testing.T) {
 	cases := []struct {
 		input string
@@ -46,6 +61,37 @@ func TestDisambiguateApostropheS(t *testing.T) {
 		}
 		if len(apostropheS.Tags) == 0 || apostropheS.Tags[0] != tc.want {
 			t.Errorf("Parse(%q) \"'s\": got %v, want %v", tc.input, apostropheS.Tags, tc.want)
+		}
+	}
+}
+
+// TestPossessiveNeighbors checks that NOUN/VERB-ambiguous tokens adjacent to a
+// possessive "'s" are resolved to NOUN. PART conflates possessive "'s" and
+// infinitival "to", so their corpus statistics cancel out and no corpus-derived
+// rule clears the 10x ratio threshold. These are handled directly in
+// DisambiguateApostropheS instead.
+func TestPossessiveNeighbors(t *testing.T) {
+	cases := []struct {
+		input string
+		word  string // the NOUN/VERB-ambiguous word adjacent to "'s"
+		want  chunky.Tag
+	}{
+		// Possessor (before "'s"): "father" is NOUN/VERB; should resolve to NOUN.
+		{"after his father 's suicide", "father", chunky.TagNOUN},
+		// Possessed head (after "'s"): "board" is NOUN/VERB; should resolve to NOUN.
+		{"the Foundation 's board of directors", "board", chunky.TagNOUN},
+		// Possessor that is a PROPN via caps should be unaffected (already unambiguous).
+		{"after Turner 's death", "Turner", chunky.TagPROPN},
+	}
+	for _, tc := range cases {
+		sents := Parse(tc.input)
+		got, resolved := tagOf(sents, tc.word)
+		if !resolved {
+			t.Errorf("Parse(%q) %q: still ambiguous, want %v", tc.input, tc.word, tc.want)
+			continue
+		}
+		if got != tc.want {
+			t.Errorf("Parse(%q) %q: got %v, want %v", tc.input, tc.word, got, tc.want)
 		}
 	}
 }

@@ -72,7 +72,11 @@ func Parse(s string) []Sentence {
 }
 
 func sentencePhase(tokens []Token) []Sentence {
-	return Segment(tokens)
+	sents := Segment(tokens)
+	for i := range sents {
+		sents[i].Tokens = DisambiguateContext(sents[i].Tokens)
+	}
+	return sents
 }
 
 // Segment splits a flat token slice into sentences. RetagCapitalized is applied

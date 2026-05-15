@@ -8,6 +8,9 @@ help:
 build: ## build module and CLI
 	go build ./...
 
+tok/rules_gen.go: rules.db rules.sh cmd/mkreules/main.go ## regenerate context disambiguation rules from corpus statistics
+	bash rules.sh | go run ./cmd/mkreules -tag1 NOUN -tag2 VERB > tok/rules_gen.go
+
 tok/lexicon_gen.go: data/brown-penn-nltk.json cmd/brown-remap/main.go closed.go words.go ## generate compiled-in lexicon for tok package
 	go run ./cmd/brown-remap/ -go < data/brown-penn-nltk.json > tok/lexicon_gen.go 2>/dev/null
 
