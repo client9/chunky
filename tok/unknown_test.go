@@ -62,6 +62,13 @@ func TestNumericCandidates(t *testing.T) {
 		{"42", chunky.TagNUM},
 		{"3.14", chunky.TagNUM},
 		{"15%", chunky.TagNUM},
+		// currency
+		{"$1", chunky.TagNUM},
+		{"$1,000", chunky.TagNUM},
+		{"$3.50", chunky.TagNUM},
+		{"£5", chunky.TagNUM},
+		{"€1,000", chunky.TagNUM},
+		{"¥500", chunky.TagNUM},
 	}
 	for _, tc := range tests {
 		tags, rule := NumericCandidates(tc.word)

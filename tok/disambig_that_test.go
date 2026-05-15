@@ -15,8 +15,8 @@ func TestDisambiguateThat(t *testing.T) {
 		// "that" before DET → SCONJ (complementizer)
 		{"He said that the car was fast.", "that", chunky.TagSCONJ},
 		{"She knew that a solution existed.", "that", chunky.TagSCONJ},
-		// "that" before NOUN → still ambiguous (leave as Tags[0])
-		{"That car is nice.", "That", chunky.TagPRON},
+		// "that" before NOUN → DET (demonstrative determiner)
+		{"That car is nice.", "That", chunky.TagDET},
 		// "that" before PRON → still ambiguous
 		{"I see that.", "that", chunky.TagPRON},
 	}

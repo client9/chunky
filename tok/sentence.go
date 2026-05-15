@@ -71,6 +71,8 @@ func Parse(s string) []Sentence {
 	tokens = DisambiguateThere(tokens)
 	tokens = DisambiguateMay(tokens)
 	tokens = DisambiguateThat(tokens)
+	tokens = DisambiguateThen(tokens)
+	tokens = DisambiguateWill(tokens)
 	return sentencePhase(tokens)
 }
 

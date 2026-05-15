@@ -16,21 +16,22 @@ func LexicalTag(tokens []Token) []Token {
 			continue
 		}
 		lower := strings.ToLower(t.Word)
-		src := wordtagmap[lower]
+		var src []chunky.Tag
 		rule := "lexicon"
-		if len(src) == 0 {
-			if tags, ok := chunky.ClosedFormTags[lower]; ok {
-				src = tags
-				rule = "closed"
-			} else if tags, ok := chunky.WordTags[lower]; ok {
-				src = tags
-				rule = "words"
-			} else if tags, ok := chunky.AbbreviationTags[lower]; ok {
-				src = tags
-				rule = "abbrev"
-			} else {
-				rule = ""
-			}
+		// WordTags is hand-curated and overrides the compiled lexicon.
+		if tags, ok := chunky.WordTags[lower]; ok {
+			src = tags
+			rule = "words"
+		} else if src = wordtagmap[lower]; len(src) > 0 {
+			// rule stays "lexicon"
+		} else if tags, ok := chunky.ClosedFormTags[lower]; ok {
+			src = tags
+			rule = "closed"
+		} else if tags, ok := chunky.AbbreviationTags[lower]; ok {
+			src = tags
+			rule = "abbrev"
+		} else {
+			rule = ""
 		}
 		// Copy to avoid aliasing into the compiled lexicon slice.
 		var tags []chunky.Tag

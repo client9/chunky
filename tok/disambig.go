@@ -141,7 +141,8 @@ func init() {
 	contextRules = make([]ContextRule, 0,
 		len(nounVerbRules)+len(adjNounRules)+len(adpPartRules)+len(auxVerbRules)+
 			len(detPronRules)+len(adpSconjRules)+len(adjVerbRules)+len(adjAdvRules)+
-			len(advDetRules)+len(adpAdvRules)+len(advNumRules))
+			len(advDetRules)+len(adpAdvRules)+len(advNumRules)+
+			len(detPronBroadRules)+len(advDetBroadRules)+len(adpSconjBroadRules)+len(nounVerbBroadRules))
 	contextRules = append(contextRules, nounVerbRules...)
 	contextRules = append(contextRules, adjNounRules...)
 	contextRules = append(contextRules, adpPartRules...)
@@ -153,6 +154,10 @@ func init() {
 	contextRules = append(contextRules, advDetRules...)
 	contextRules = append(contextRules, adpAdvRules...)
 	contextRules = append(contextRules, advNumRules...)
+	contextRules = append(contextRules, detPronBroadRules...)
+	contextRules = append(contextRules, advDetBroadRules...)
+	contextRules = append(contextRules, adpSconjBroadRules...)
+	contextRules = append(contextRules, nounVerbBroadRules...)
 	sort.SliceStable(contextRules, func(i, j int) bool {
 		return contextRules[i].specificity() > contextRules[j].specificity()
 	})

@@ -5,13 +5,16 @@
 // Usage:
 //
 //	go run ./cmd/eval-chunks data/conll2000-test.txt
+//	go run ./cmd/eval-chunks -errors NP data/conll2000-test.txt   # show FP/FN spans
 package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/client9/chunky"
@@ -19,8 +22,9 @@ import (
 )
 
 type conllToken struct {
-	word string
-	gold chunky.ChunkTag
+	word    string
+	pennPos string
+	gold    chunky.ChunkTag
 }
 
 // readConll reads a CoNLL-2000 file into sentences. Each sentence is a slice
@@ -50,13 +54,13 @@ func readConll(path string) ([][]conllToken, error) {
 			continue
 		}
 		word := fields[0]
+		pennPos := fields[1]
 		rawChunk := fields[2]
 		ct, err := chunky.ParseChunkTag(rawChunk)
 		if err != nil {
-			// Unknown type (SBAR, PRT, CONJP, …) → treat as O.
 			ct = chunky.ChunkTag{IOB: 'O'}
 		}
-		current = append(current, conllToken{word: word, gold: ct})
+		current = append(current, conllToken{word: word, pennPos: pennPos, gold: ct})
 	}
 	if len(current) > 0 {
 		sentences = append(sentences, current)
@@ -75,6 +79,7 @@ func tagWords(words []string) []tok.Token {
 	tokens = tok.TagUnknowns(tokens)
 	tokens = tok.RetagCapitalized(tokens)
 	tokens = tok.DisambiguateThat(tokens)
+	tokens = tok.DisambiguateWill(tokens)
 	for {
 		prev := tok.CopyTags(tokens)
 		tokens = tok.DisambiguateContext(tokens)
@@ -158,15 +163,78 @@ func (c counts) f1() float64 {
 	return 2 * p * r / (p + r)
 }
 
+// spanWords returns the space-joined words of a span from the sentence.
+func spanWords(sent []conllToken, s span) string {
+	parts := make([]string, s.end-s.start)
+	for i, ct := range sent[s.start:s.end] {
+		parts[i] = ct.word
+	}
+	return strings.Join(parts, " ")
+}
+
+// spanTags returns the space-joined POS tags of a span.
+func spanTags(sent []conllToken, s span) string {
+	parts := make([]string, s.end-s.start)
+	for i, ct := range sent[s.start:s.end] {
+		parts[i] = ct.pennPos
+	}
+	return strings.Join(parts, " ")
+}
+
+// spanPredTags returns the space-joined predicted tags for a span.
+func spanPredTags(tagged []tok.Token, s span) string {
+	parts := make([]string, s.end-s.start)
+	for i, t := range tagged[s.start:s.end] {
+		if len(t.Tags) == 1 {
+			parts[i] = t.Tags[0].String()
+		} else {
+			tags := make([]string, len(t.Tags))
+			for j, tag := range t.Tags {
+				tags[j] = tag.String()
+			}
+			parts[i] = strings.Join(tags, "/")
+		}
+	}
+	return strings.Join(parts, " ")
+}
+
+type errorEntry struct {
+	kind    string // "FP" or "FN"
+	words   string
+	goldPos string // Penn POS tags from gold data
+	predPos string // our predicted tags
+	count   int
+}
+
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "usage: eval-chunks <conll2000-file>")
+	errKind := flag.String("errors", "", "dump FP/FN spans for this chunk type (NP, VP, PP)")
+	topN := flag.Int("top", 30, "number of error patterns to show")
+	flag.Parse()
+
+	args := flag.Args()
+	if len(args) < 1 {
+		fmt.Fprintln(os.Stderr, "usage: eval-chunks [-errors NP|VP|PP] [-top N] <conll2000-file>")
 		os.Exit(1)
 	}
 
-	sentences, err := readConll(os.Args[1])
+	sentences, err := readConll(args[0])
 	if err != nil {
 		log.Fatalf("read: %v", err)
+	}
+
+	var filterKind chunky.ChunkKind
+	doErrors := *errKind != ""
+	if doErrors {
+		switch strings.ToUpper(*errKind) {
+		case "NP":
+			filterKind = chunky.ChunkNP
+		case "VP":
+			filterKind = chunky.ChunkVP
+		case "PP":
+			filterKind = chunky.ChunkPP
+		default:
+			log.Fatalf("unknown chunk type %q; use NP, VP, or PP", *errKind)
+		}
 	}
 
 	totals := map[chunky.ChunkKind]*counts{
@@ -175,6 +243,10 @@ func main() {
 		chunky.ChunkPP: {},
 	}
 	overall := &counts{}
+
+	// error tallies: "FP|words" or "FN|words" → count
+	fpByWords := map[string]*errorEntry{}
+	fnByWords := map[string]*errorEntry{}
 
 	for _, sent := range sentences {
 		words := make([]string, len(sent))
@@ -186,7 +258,6 @@ func main() {
 		gold := goldSpans(sent)
 		pred := predSpans(tagged)
 
-		// Index gold spans for O(1) lookup.
 		goldSet := make(map[span]bool, len(gold))
 		for _, s := range gold {
 			goldSet[s] = true
@@ -204,6 +275,21 @@ func main() {
 				} else {
 					c.fp++
 					overall.fp++
+					if doErrors && s.kind == filterKind {
+						w := spanWords(sent, s)
+						key := w
+						if e, ok := fpByWords[key]; ok {
+							e.count++
+						} else {
+							fpByWords[key] = &errorEntry{
+								kind:    "FP",
+								words:   w,
+								goldPos: spanTags(sent, s),
+								predPos: spanPredTags(tagged, s),
+								count:   1,
+							}
+						}
+					}
 				}
 			}
 		}
@@ -212,6 +298,21 @@ func main() {
 				if !predSet[s] {
 					c.fn++
 					overall.fn++
+					if doErrors && s.kind == filterKind {
+						w := spanWords(sent, s)
+						key := w
+						if e, ok := fnByWords[key]; ok {
+							e.count++
+						} else {
+							fnByWords[key] = &errorEntry{
+								kind:    "FN",
+								words:   w,
+								goldPos: spanTags(sent, s),
+								predPos: spanPredTags(tagged, s),
+								count:   1,
+							}
+						}
+					}
 				}
 			}
 		}
@@ -230,6 +331,50 @@ func main() {
 	fmt.Printf("%-6s  %7d  %7d  %7d  %5.1f%%  %5.1f%%  %5.1f%%\n",
 		"TOTAL", overall.tp, overall.fp, overall.fn,
 		overall.precision()*100, overall.recall()*100, overall.f1()*100)
-
 	fmt.Printf("\n%d sentences evaluated\n", len(sentences))
+
+	if !doErrors {
+		return
+	}
+
+	// Sort and print FP patterns.
+	fps := make([]*errorEntry, 0, len(fpByWords))
+	for _, e := range fpByWords {
+		fps = append(fps, e)
+	}
+	sort.Slice(fps, func(i, j int) bool { return fps[i].count > fps[j].count })
+
+	fmt.Printf("\n=== %s FP (predicted but not gold) — top %d patterns ===\n", *errKind, *topN)
+	fmt.Printf("%-6s  %-40s  %-30s  %s\n", "count", "words", "gold-pos", "pred-pos")
+	fmt.Println(strings.Repeat("-", 110))
+	for i, e := range fps {
+		if i >= *topN {
+			break
+		}
+		fmt.Printf("%6d  %-40s  %-30s  %s\n", e.count, trunc(e.words, 40), trunc(e.goldPos, 30), e.predPos)
+	}
+
+	// Sort and print FN patterns.
+	fns := make([]*errorEntry, 0, len(fnByWords))
+	for _, e := range fnByWords {
+		fns = append(fns, e)
+	}
+	sort.Slice(fns, func(i, j int) bool { return fns[i].count > fns[j].count })
+
+	fmt.Printf("\n=== %s FN (gold but not predicted) — top %d patterns ===\n", *errKind, *topN)
+	fmt.Printf("%-6s  %-40s  %-30s  %s\n", "count", "words", "gold-pos", "pred-pos")
+	fmt.Println(strings.Repeat("-", 110))
+	for i, e := range fns {
+		if i >= *topN {
+			break
+		}
+		fmt.Printf("%6d  %-40s  %-30s  %s\n", e.count, trunc(e.words, 40), trunc(e.goldPos, 30), e.predPos)
+	}
+}
+
+func trunc(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n-1] + "…"
 }

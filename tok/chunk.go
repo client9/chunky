@@ -14,10 +14,7 @@ func Chunk(tokens []Token) []Token {
 		case chunky.TagDET, chunky.TagADJ, chunky.TagNOUN, chunky.TagPROPN, chunky.TagNUM, chunky.TagPRON:
 			i = markNP(tokens, i)
 		case chunky.TagPART:
-			if tokens[i].Word == "'s" {
-				// Possessive 's starts a new NP.
-				i = markNP(tokens, i)
-			} else if isInfinitival(tokens, i) {
+			if isInfinitival(tokens, i) {
 				// Infinitival "to" before a VERB starts a VP.
 				i = markVP(tokens, i)
 			} else {
@@ -32,7 +29,12 @@ func Chunk(tokens []Token) []Token {
 				i++
 			}
 		case chunky.TagAUX, chunky.TagVERB:
-			i = markVP(tokens, i)
+			// Possessive 's is always O — never a chunk head.
+			if tokens[i].Word == "'s" {
+				i++
+			} else {
+				i = markVP(tokens, i)
+			}
 		default:
 			i++
 		}
@@ -54,11 +56,18 @@ func isInfinitival(tokens []Token, i int) bool {
 }
 
 func markNP(tokens []Token, start int) int {
-	tokens[start].Chunk = chunky.ChunkTag{IOB: 'B', Kind: chunky.ChunkNP}
 	i := start + 1
 	for i < len(tokens) && isNPCont(tokens[i]) {
-		tokens[i].Chunk = chunky.ChunkTag{IOB: 'I', Kind: chunky.ChunkNP}
 		i++
+	}
+	// Suppress NPs that consist only of a bare DET — "the", "a", "an" alone
+	// are never chunk heads in CoNLL-2000 style.
+	if i == start+1 && len(tokens[start].Tags) > 0 && tokens[start].Tags[0] == chunky.TagDET {
+		return i
+	}
+	tokens[start].Chunk = chunky.ChunkTag{IOB: 'B', Kind: chunky.ChunkNP}
+	for j := start + 1; j < i; j++ {
+		tokens[j].Chunk = chunky.ChunkTag{IOB: 'I', Kind: chunky.ChunkNP}
 	}
 	return i
 }

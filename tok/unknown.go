@@ -3,6 +3,7 @@ package tok
 import (
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/client9/chunky"
 )
@@ -177,10 +178,22 @@ func HyphenCandidates(word string) ([]chunky.Tag, string) {
 	return nil, ""
 }
 
+// currencySymbols is the set of leading characters that mark a currency amount.
+const currencySymbols = "$£€¥¢₹₩₪"
+
 // NumericCandidates tags numeric forms: integers, decimals, ordinals, decades,
-// and percentages. Returns nil if the word is not a numeric form.
+// percentages, and currency amounts ($1, £5.50, €1,000). Returns nil if the
+// word is not a numeric form.
 func NumericCandidates(word string) ([]chunky.Tag, string) {
 	lower := strings.ToLower(word)
+
+	// Strip a leading currency symbol and treat the remainder as a number.
+	if r, size := utf8.DecodeRuneInString(lower); r != utf8.RuneError && strings.ContainsRune(currencySymbols, r) && len(lower) > size {
+		if isNumber(lower[size:]) {
+			return []chunky.Tag{chunky.TagNUM}, "morph:currency"
+		}
+	}
+
 	if isOrdinal(lower) {
 		return []chunky.Tag{chunky.TagADJ}, "morph:ordinal"
 	}

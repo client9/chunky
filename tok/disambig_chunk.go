@@ -40,6 +40,14 @@ func DisambiguateByChunk(tokens []Token) []Token {
 				tokens[i].Tags = []chunky.Tag{chunky.TagPART}
 				tokens[i].Rule = tok.Rule + "+chunk"
 			}
+		case tok.HasTag(chunky.TagAUX) && tok.HasTag(chunky.TagNOUN):
+			if kind == chunky.ChunkVP {
+				tokens[i].Tags = []chunky.Tag{chunky.TagAUX}
+				tokens[i].Rule = tok.Rule + "+chunk"
+			} else if kind == chunky.ChunkNP {
+				tokens[i].Tags = []chunky.Tag{chunky.TagNOUN}
+				tokens[i].Rule = tok.Rule + "+chunk"
+			}
 		}
 	}
 	return tokens
