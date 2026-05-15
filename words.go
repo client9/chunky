@@ -16,6 +16,12 @@ var WordTags = map[string][]Tag{
 	")":      {TagPUNCT},
 	"-":      {TagPUNCT},
 	"--":     {TagPUNCT},
+	"{":      {TagPUNCT}, // TBD - probably strip brace blocks
+	"}":      {TagPUNCT}, // TBD -
+	"$":      {TagSYM},   // as per spaCy
+	"%":      {TagNOUN},  // as per spaCy
+	"_":      {TagPUNCT},
+	"\"":     {TagPUNCT},
 	"\u2013": {TagPUNCT}, // en dash
 	"\u2014": {TagPUNCT}, // em dash
 
