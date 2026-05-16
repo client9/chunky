@@ -16,7 +16,7 @@ func ParseTaggedLine(line string) []Token {
 		word := f[:i]
 		t := Token{Word: word}
 		if tag, err := ParseTag(f[i+1:]); err == nil {
-			t.Tags = []Tag{tag}
+			t.Tags = tag
 		}
 		tokens = append(tokens, t)
 	}

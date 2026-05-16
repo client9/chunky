@@ -3,6 +3,8 @@ package tok
 import (
 	"strings"
 	"testing"
+
+	"github.com/client9/chunky"
 )
 
 func TestSegment(t *testing.T) {
@@ -57,8 +59,8 @@ func TestSegmentSentenceInitialDET(t *testing.T) {
 	if first.Word != "The" {
 		t.Fatalf("expected 'The', got %q", first.Word)
 	}
-	if len(first.Tags) != 1 || first.Tags[0].String() != "DET" {
-		t.Errorf("'The' at sentence start: got %v, want [DET]", first.Tags)
+	if !first.IsResolved() || first.Tags.String() != "DET" {
+		t.Errorf("'The' at sentence start: got %v, want DET", first.Tags)
 	}
 }
 
@@ -71,8 +73,8 @@ func TestSegmentSentenceInitialNoun(t *testing.T) {
 	if first.Word != "Hantaviruses" {
 		t.Fatalf("expected 'Hantaviruses', got %q", first.Word)
 	}
-	if len(first.Tags) != 1 || first.Tags[0].String() != "NOUN" {
-		t.Errorf("'Hantaviruses' at sentence start: got %v, want [NOUN]", first.Tags)
+	if !first.IsResolved() || first.Tags.String() != "NOUN" {
+		t.Errorf("'Hantaviruses' at sentence start: got %v, want NOUN", first.Tags)
 	}
 }
 
@@ -85,10 +87,8 @@ func TestSegmentSentenceInitialLexiconWord(t *testing.T) {
 	if first.Word != "Run" {
 		t.Fatalf("expected 'Run', got %q", first.Word)
 	}
-	for _, c := range first.Tags {
-		if c.String() == "PROPN" {
-			t.Errorf("'Run' at sentence start: got PROPN, want lexicon tag (VERB/NOUN)")
-		}
+	if first.HasTag(chunky.TagPROPN) {
+		t.Errorf("'Run' at sentence start: got PROPN, want lexicon tag (VERB/NOUN)")
 	}
 }
 

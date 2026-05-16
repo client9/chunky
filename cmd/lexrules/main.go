@@ -18,10 +18,13 @@ type FeatureFunc func(prev2, prev, curr, next, next2 chunky.Token) string
 
 // tagStr returns the string form of a token's first tag, or "" if untagged.
 func tagStr(t chunky.Token) string {
-	if len(t.Tags) == 0 {
+	if t.IsUnknownTag() {
 		return ""
 	}
-	return t.Tags[0].String()
+	if t.IsResolved() {
+		return t.Tags.String()
+	}
+	return t.Tags.String()
 }
 
 // features is the registry of all named feature templates.

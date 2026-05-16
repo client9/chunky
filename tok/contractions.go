@@ -48,7 +48,7 @@ func SplitContractions(tokens []Token) []Token {
 		// (can't→can+'t, where "ca" is not a word).
 		if suffix == "'t" && ap >= 2 && (t.Word[ap-1] == 'n' || t.Word[ap-1] == 'N') {
 			stemNoN := strings.ToLower(t.Word[:ap-1])
-			if len(wordtagmap[stemNoN]) > 0 || len(chunky.AbbreviationTags[stemNoN]) > 0 {
+			if wordtagmap[stemNoN] != 0 || chunky.AbbreviationTags[stemNoN] != 0 {
 				out = append(out, Token{Word: t.Word[:ap-1], Offset: t.Offset})
 				out = append(out, Token{Word: "n't", Offset: t.Offset + ap - 1})
 			} else {

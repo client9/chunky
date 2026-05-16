@@ -30,6 +30,8 @@ const (
 
 func (t Tag) String() string {
 	switch t {
+	case 0:
+		return "<NONE>"
 	case TagUNK:
 		return "<UNK>"
 	case TagADJ:
@@ -69,6 +71,13 @@ func (t Tag) String() string {
 	default:
 		panic("unknown tag")
 	}
+}
+
+// AllTags lists every tag in a stable order for display/iteration.
+var AllTags = []Tag{
+	TagADJ, TagADP, TagADV, TagAUX, TagCCONJ, TagDET, TagINTJ,
+	TagNOUN, TagNUM, TagPART, TagPRON, TagPROPN, TagPUNCT,
+	TagSCONJ, TagSYM, TagVERB, TagX, TagUNK,
 }
 
 var tagNames = map[string]Tag{

@@ -1,17 +1,19 @@
 package chunky
 
-import "strings"
+import (
+	"math/bits"
+	"strings"
+)
 
 // Token is a single word-like unit produced by the tagging pipeline.
 // Offset records the token's byte position in the original source string.
-// Tags holds the ordered candidate tag set (most likely first); it is empty
-// for untagged tokens and has length 1 when the tag is definitive (e.g.
-// corpus-assigned ground-truth or a merged compound).
+// Tags holds the candidate tag set as a bitfield; zero means untagged.
+// A single set bit means the tag is fully resolved.
 // Rule identifies which pipeline step or rule assigned the tags.
 type Token struct {
 	Word   string
 	Offset int
-	Tags   []Tag
+	Tags   Tag
 	Rule   string
 	Chunk  ChunkTag
 }
@@ -25,28 +27,33 @@ type Sentence struct {
 
 // IsUnknownTag reports whether the token has no assigned tags.
 func (t Token) IsUnknownTag() bool {
-	return len(t.Tags) == 0 || t.Tags[0] == TagUNK
+	return t.Tags == 0
 }
 
-// HasTag reports whether tag x appears anywhere in the token's tag set.
+// IsResolved reports whether the token has exactly one tag assigned.
+func (t Token) IsResolved() bool {
+	return bits.OnesCount32(uint32(t.Tags)) == 1
+}
+
+// HasTag reports whether tag x is in the token's tag set.
 func (t Token) HasTag(x Tag) bool {
-	for _, r := range t.Tags {
-		if r == x {
-			return true
-		}
-	}
-	return false
+	return t.Tags&x != 0
 }
 
 // String returns the token in "word/TAG" format for a single tag, or
 // "word/{TAG1,TAG2,...}" for multiple candidates.
 func (t Token) String() string {
-	if len(t.Tags) == 1 {
-		return t.Word + "/" + t.Tags[0].String()
+	if t.IsResolved() {
+		return t.Word + "/" + t.Tags.String()
 	}
-	parts := make([]string, len(t.Tags))
-	for i, s := range t.Tags {
-		parts[i] = s.String()
+	var parts []string
+	for _, tag := range AllTags {
+		if t.Tags&tag != 0 {
+			parts = append(parts, tag.String())
+		}
+	}
+	if len(parts) == 0 {
+		return t.Word + "/<UNK>"
 	}
 	return t.Word + "/{" + strings.Join(parts, ",") + "}"
 }

@@ -28,12 +28,12 @@ func TestHyphenCompoundParticiple(t *testing.T) {
 	}
 	for _, tc := range cases {
 		tags, _ := HyphenCandidates(tc.word)
-		if len(tags) == 0 {
+		if tags == 0 {
 			t.Errorf("HyphenCandidates(%q): no tags returned", tc.word)
 			continue
 		}
-		if len(tags) != 1 || tags[0] != tc.want {
-			t.Errorf("HyphenCandidates(%q) = %v, want [%v]", tc.word, tags, tc.want)
+		if tags != tc.want {
+			t.Errorf("HyphenCandidates(%q) = %v, want %v", tc.word, tags, tc.want)
 		}
 	}
 }
@@ -41,9 +41,7 @@ func TestHyphenCompoundParticiple(t *testing.T) {
 func TestInflectionNoPronoun(t *testing.T) {
 	// "themed" must not return PRON (false stem "them") after filtering
 	tags, _ := InflectionCandidates("themed")
-	for _, tag := range tags {
-		if tag == chunky.TagPRON {
-			t.Errorf("InflectionCandidates(%q): got PRON, want only open-class tags", "themed")
-		}
+	if tags&chunky.TagPRON != 0 {
+		t.Errorf("InflectionCandidates(%q): got PRON, want only open-class tags", "themed")
 	}
 }

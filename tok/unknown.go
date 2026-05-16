@@ -15,52 +15,55 @@ func TagUnknowns(tokens []Token) []Token {
 		if !t.IsUnknownTag() {
 			continue
 		}
-		if candidates, rule := NumericCandidates(t.Word); candidates != nil {
+		if candidates, rule := NumericCandidates(t.Word); candidates != 0 {
 			tokens[i].Tags = candidates
 			tokens[i].Rule = rule
 			continue
 		}
-		if candidates, rule := InflectionCandidates(t.Word); candidates != nil {
+		if candidates, rule := InflectionCandidates(t.Word); candidates != 0 {
 			tokens[i].Tags = candidates
 			tokens[i].Rule = rule
 			continue
 		}
-		if candidates, rule := HyphenCandidates(t.Word); candidates != nil {
+		if candidates, rule := HyphenCandidates(t.Word); candidates != 0 {
 			tokens[i].Tags = candidates
 			tokens[i].Rule = rule
 			continue
 		}
-		if candidates, rule := MorphCandidates(t.Word, i == 0); candidates != nil {
+		if candidates, rule := MorphCandidates(t.Word, i == 0); candidates != 0 {
 			tokens[i].Tags = candidates
 			tokens[i].Rule = rule
 			continue
 		}
 		if isAlpha(t.Word) {
-			tokens[i].Tags = []chunky.Tag{chunky.TagNOUN}
+			tokens[i].Tags = chunky.TagNOUN
 			tokens[i].Rule = "unk:word"
 		}
 	}
 	return tokens
 }
 
+// closedClassMask covers tags that inflection never produces.
+const closedClassMask = chunky.TagPRON | chunky.TagDET | chunky.TagADP | chunky.TagAUX |
+	chunky.TagSCONJ | chunky.TagCCONJ | chunky.TagPART | chunky.TagPUNCT |
+	chunky.TagINTJ | chunky.TagSYM
+
 // InflectionCandidates looks up candidate tags by stripping common inflectional
 // suffixes and checking the resulting stem against the lexicon. Returns
 // candidates and a rule ID of the form "inflect:<suffix>:<stem>".
-func InflectionCandidates(word string) ([]chunky.Tag, string) {
+func InflectionCandidates(word string) (chunky.Tag, string) {
 	lower := strings.ToLower(word)
 
-	seen := make(map[chunky.Tag]bool)
+	var tags chunky.Tag
 	matchedStem := ""
 	matchedSuffix := ""
 
 	try := func(suffix, stem string) {
-		tags := wordtagmap[stem]
-		if len(tags) == 0 {
+		t := wordtagmap[stem]
+		if t == 0 {
 			return
 		}
-		for _, t := range tags {
-			seen[t] = true
-		}
+		tags |= t
 		if matchedStem == "" {
 			matchedStem = stem
 			matchedSuffix = suffix
@@ -105,26 +108,15 @@ func InflectionCandidates(word string) ([]chunky.Tag, string) {
 		try("-est+e", stem+"e")
 	}
 
-	if len(seen) == 0 {
-		return nil, ""
+	if tags == 0 {
+		return 0, ""
 	}
-	// Inflectional suffixes only produce open-class words. Strip closed-class
-	// tags that crept in via false stem matches (e.g. "them" from "themed").
-	for _, closed := range []chunky.Tag{
-		chunky.TagPRON, chunky.TagDET, chunky.TagADP, chunky.TagAUX,
-		chunky.TagSCONJ, chunky.TagCCONJ, chunky.TagPART, chunky.TagPUNCT,
-		chunky.TagINTJ, chunky.TagSYM,
-	} {
-		delete(seen, closed)
+	// Strip closed-class tags that crept in via false stem matches.
+	tags &^= closedClassMask
+	if tags == 0 {
+		return 0, ""
 	}
-	if len(seen) == 0 {
-		return nil, ""
-	}
-	out := make([]chunky.Tag, 0, len(seen))
-	for t := range seen {
-		out = append(out, t)
-	}
-	return out, "inflect:" + matchedSuffix + ":" + matchedStem
+	return tags, "inflect:" + matchedSuffix + ":" + matchedStem
 }
 
 // hyphenAdjSuffixes always produce ADJ in a hyphenated compound.
@@ -135,9 +127,7 @@ var hyphenAdjSuffixes = map[string]bool{
 }
 
 // isCompoundAdj reports whether the last component of a hyphenated word
-// signals a compound adjective. Past participles ("themed", "based",
-// "minded") and present participles ("facing", "looking") in compound
-// position are reliably adjectival ("evidence-based", "forward-looking").
+// signals a compound adjective.
 func isCompoundAdj(last string) bool {
 	if len(last) > 3 && strings.HasSuffix(last, "ed") {
 		return true
@@ -150,91 +140,83 @@ func isCompoundAdj(last string) bool {
 
 // HyphenCandidates handles hyphenated compounds by looking up the last
 // component in the lexicon and applying morph rules as a fallback.
-func HyphenCandidates(word string) ([]chunky.Tag, string) {
+func HyphenCandidates(word string) (chunky.Tag, string) {
 	i := strings.LastIndex(word, "-")
 	if i < 0 || i == len(word)-1 {
-		return nil, ""
+		return 0, ""
 	}
 	last := strings.ToLower(word[i+1:])
 
 	if hyphenAdjSuffixes[last] {
-		return []chunky.Tag{chunky.TagADJ}, "hyphen:adj-suffix:" + last
+		return chunky.TagADJ, "hyphen:adj-suffix:" + last
 	}
 	if isCompoundAdj(last) {
-		return []chunky.Tag{chunky.TagADJ}, "hyphen:compound-participle"
+		return chunky.TagADJ, "hyphen:compound-participle"
 	}
-	if tags, ok := wordtagmap[last]; ok {
+	if tags := wordtagmap[last]; tags != 0 {
 		return tags, "hyphen:lexicon:" + last
 	}
-	if tags, rule := NumericCandidates(last); tags != nil {
+	if tags, rule := NumericCandidates(last); tags != 0 {
 		return tags, "hyphen:" + rule
 	}
-	if tags, rule := InflectionCandidates(last); tags != nil {
+	if tags, rule := InflectionCandidates(last); tags != 0 {
 		return tags, "hyphen:" + rule
 	}
-	if tags, rule := MorphCandidates(last, false); tags != nil {
+	if tags, rule := MorphCandidates(last, false); tags != 0 {
 		return tags, "hyphen:" + rule
 	}
-	return nil, ""
+	return 0, ""
 }
 
 // currencySymbols is the set of leading characters that mark a currency amount.
 const currencySymbols = "$£€¥¢₹₩₪"
 
 // NumericCandidates tags numeric forms: integers, decimals, ordinals, decades,
-// percentages, and currency amounts ($1, £5.50, €1,000). Returns nil if the
-// word is not a numeric form.
-func NumericCandidates(word string) ([]chunky.Tag, string) {
+// percentages, and currency amounts ($1, £5.50, €1,000). Returns 0 if not numeric.
+func NumericCandidates(word string) (chunky.Tag, string) {
 	lower := strings.ToLower(word)
 
 	// Strip a leading currency symbol and treat the remainder as a number.
 	if r, size := utf8.DecodeRuneInString(lower); r != utf8.RuneError && strings.ContainsRune(currencySymbols, r) && len(lower) > size {
 		if isNumber(lower[size:]) {
-			return []chunky.Tag{chunky.TagNUM}, "morph:currency"
+			return chunky.TagNUM, "morph:currency"
 		}
 	}
 
 	if isOrdinal(lower) {
-		return []chunky.Tag{chunky.TagADJ}, "morph:ordinal"
+		return chunky.TagADJ, "morph:ordinal"
 	}
 	if isDecade(lower) {
-		return []chunky.Tag{chunky.TagNOUN, chunky.TagNUM}, "morph:decade"
+		return chunky.TagNOUN | chunky.TagNUM, "morph:decade"
 	}
 	if isNumber(lower) {
-		return []chunky.Tag{chunky.TagNUM}, "morph:num"
+		return chunky.TagNUM, "morph:num"
 	}
 	if strings.HasSuffix(lower, "%") && isNumber(lower[:len(lower)-1]) {
-		return []chunky.Tag{chunky.TagNUM}, "morph:percent"
+		return chunky.TagNUM, "morph:percent"
 	}
-	return nil, ""
+	return 0, ""
 }
-
-// TODO: evaluate additional suffix rules using corpus data:
-//
-//	-ium, -ine  mostly NOUN (physics/chemistry: calcium, chlorine)
-//	-ary        NOUN/ADJ ambiguous (library, military)
-//	-ogy        NOUN (biology, theology)
-//	-ies        NOUN/VERB ambiguous when not a plural (series, species)
 
 // MorphCandidates returns candidate tags based on morphological features.
 // isFirst suppresses the capitalization rule for sentence-initial words.
-func MorphCandidates(word string, isFirst bool) ([]chunky.Tag, string) {
-	seen := make(map[chunky.Tag]bool)
-	add := func(tags ...chunky.Tag) {
-		for _, t := range tags {
-			seen[t] = true
+func MorphCandidates(word string, isFirst bool) (chunky.Tag, string) {
+	var tags chunky.Tag
+	add := func(ts ...chunky.Tag) {
+		for _, t := range ts {
+			tags |= t
 		}
 	}
 
 	if len(word) == 0 {
-		return nil, ""
+		return 0, ""
 	}
 
 	lower := strings.ToLower(word)
 	var rules []string
 
 	if strings.Contains(word, "-") && word[0] >= 'A' && word[0] <= 'Z' {
-		return []chunky.Tag{chunky.TagADJ}, "morph:hyphen+caps"
+		return chunky.TagADJ, "morph:hyphen+caps"
 	}
 	if !isFirst && word[0] >= 'A' && word[0] <= 'Z' {
 		add(chunky.TagPROPN, chunky.TagADJ)
@@ -341,14 +323,10 @@ func MorphCandidates(word string, isFirst bool) ([]chunky.Tag, string) {
 		rules = append(rules, "morph:"+prefix)
 	}
 
-	if len(seen) == 0 {
-		return nil, ""
+	if tags == 0 {
+		return 0, ""
 	}
-	out := make([]chunky.Tag, 0, len(seen))
-	for t := range seen {
-		out = append(out, t)
-	}
-	return out, strings.Join(rules, "+")
+	return tags, strings.Join(rules, "+")
 }
 
 func isDecade(s string) bool {

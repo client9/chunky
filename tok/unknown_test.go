@@ -72,7 +72,7 @@ func TestNumericCandidates(t *testing.T) {
 	}
 	for _, tc := range tests {
 		tags, rule := NumericCandidates(tc.word)
-		if tags == nil {
+		if tags == 0 {
 			t.Errorf("NumericCandidates(%q) = nil, want tags including %v", tc.word, tc.wantTag)
 			continue
 		}
@@ -110,12 +110,12 @@ func TestMorphCandidates(t *testing.T) {
 	for _, tc := range tests {
 		tags, rule := MorphCandidates(tc.word, tc.isFirst)
 		if tc.wantNil {
-			if tags != nil {
+			if tags != 0 {
 				t.Errorf("MorphCandidates(%q, %v) = %v, want nil", tc.word, tc.isFirst, tags)
 			}
 			continue
 		}
-		if tags == nil {
+		if tags == 0 {
 			t.Errorf("MorphCandidates(%q, %v) = nil (rule=%q), want tags including %v", tc.word, tc.isFirst, rule, tc.wantTag)
 			continue
 		}
@@ -141,7 +141,7 @@ func TestInflectionCandidates(t *testing.T) {
 	}
 	for _, tc := range tests {
 		tags, rule := InflectionCandidates(tc.word)
-		if tags == nil {
+		if tags == 0 {
 			t.Errorf("InflectionCandidates(%q) = nil, want tags including %v", tc.word, tc.wantTag)
 			continue
 		}
@@ -165,7 +165,7 @@ func TestHyphenCandidates(t *testing.T) {
 	}
 	for _, tc := range tests {
 		tags, rule := HyphenCandidates(tc.word)
-		if tags == nil {
+		if tags == 0 {
 			t.Errorf("HyphenCandidates(%q) = nil, want tags including %v", tc.word, tc.wantTag)
 			continue
 		}

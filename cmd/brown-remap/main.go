@@ -9,7 +9,6 @@ import (
 	"log"
 	"maps"
 	"os"
-	"slices"
 	"sort"
 	"strings"
 
@@ -37,19 +36,16 @@ func main() {
 	countTotal := 0
 	countUni := 0
 
-	// convert tags
-	outmap := make(map[string][]chunky.Tag, len(wordmap))
+	// convert tags — each word gets a bitfield OR of all observed tags
+	outmap := make(map[string]chunky.Tag, len(wordmap))
 	for word, btags := range wordmap {
 
 		// Ignore words with upper case letters.
-		// they don't belong in our lexicon - often abbreviations, and limited use proper nouns
-		// If they are "interesting" they'll also appear in lower case versions.
 		if strings.ContainsAny(word, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
 			continue
 		}
 
-		// contractions and posessives don't go in
-		// lexicon dictionary.
+		// contractions and possessives don't go in the lexicon dictionary.
 		if strings.Contains(word, "'") {
 			continue
 		}
@@ -64,7 +60,7 @@ func main() {
 			continue
 		}
 
-		tlist := make([]chunky.Tag, 0, len(btags))
+		var combined chunky.Tag
 		for _, bt := range btags {
 			// these are slang words or contractions
 			if strings.Contains(bt, "+") {
@@ -78,57 +74,49 @@ func main() {
 			if udtag == chunky.TagUNK {
 				log.Printf("brown tag of %s didn't remap for word %q", bt, word)
 			}
-			tlist = append(tlist, chunky.TagFromBrownTag(bt))
+			combined |= udtag
 		}
-		if len(tlist) == 0 {
+		if combined == 0 {
 			// most non-English words and junk
 			log.Printf("skipped word %q: no tags", word)
 			continue
 		}
 
-		countTotal += 1
-		if len(tlist) == 1 {
-			countUni += 1
+		countTotal++
+		if chunky.Tag(combined & (combined - 1)) == 0 { // single bit set
+			countUni++
 		}
 
-		slices.Sort(tlist)
-		tlist = slices.Compact(tlist)
-		outmap[word] = tlist
+		outmap[word] = combined
 	}
 
-	// over-ride on closed forms
+	// override with closed forms, hand-curated words, abbreviations
 	maps.Copy(outmap, chunky.ClosedFormTags)
-
-	// add hand-curated open-category words missing from the corpus
 	maps.Copy(outmap, chunky.WordTags)
-
-	// add abbreviations
 	maps.Copy(outmap, chunky.AbbreviationTags)
 
 	if *goMode {
-		// Map Tag value → Go constant name (t.String() is not always a valid identifier).
 		tagGoName := map[chunky.Tag]string{
-			chunky.TagUNK:   "TagUNK",
-			chunky.TagADJ:   "TagADJ",
-			chunky.TagADP:   "TagADP",
-			chunky.TagADV:   "TagADV",
-			chunky.TagAUX:   "TagAUX",
-			chunky.TagDET:   "TagDET",
-			chunky.TagCCONJ: "TagCCONJ",
-			chunky.TagINTJ:  "TagINTJ",
-			chunky.TagNOUN:  "TagNOUN",
-			chunky.TagNUM:   "TagNUM",
-			chunky.TagPART:  "TagPART",
-			chunky.TagPRON:  "TagPRON",
-			chunky.TagPROPN: "TagPROPN",
-			chunky.TagPUNCT: "TagPUNCT",
-			chunky.TagSCONJ: "TagSCONJ",
-			chunky.TagSYM:   "TagSYM",
-			chunky.TagVERB:  "TagVERB",
-			chunky.TagX:     "TagX",
+			chunky.TagUNK:   "chunky.TagUNK",
+			chunky.TagADJ:   "chunky.TagADJ",
+			chunky.TagADP:   "chunky.TagADP",
+			chunky.TagADV:   "chunky.TagADV",
+			chunky.TagAUX:   "chunky.TagAUX",
+			chunky.TagDET:   "chunky.TagDET",
+			chunky.TagCCONJ: "chunky.TagCCONJ",
+			chunky.TagINTJ:  "chunky.TagINTJ",
+			chunky.TagNOUN:  "chunky.TagNOUN",
+			chunky.TagNUM:   "chunky.TagNUM",
+			chunky.TagPART:  "chunky.TagPART",
+			chunky.TagPRON:  "chunky.TagPRON",
+			chunky.TagPROPN: "chunky.TagPROPN",
+			chunky.TagPUNCT: "chunky.TagPUNCT",
+			chunky.TagSCONJ: "chunky.TagSCONJ",
+			chunky.TagSYM:   "chunky.TagSYM",
+			chunky.TagVERB:  "chunky.TagVERB",
+			chunky.TagX:     "chunky.TagX",
 		}
 
-		// Sort words for deterministic output.
 		words := make([]string, 0, len(outmap))
 		for w := range outmap {
 			words = append(words, w)
@@ -139,20 +127,21 @@ func main() {
 		fmt.Println()
 		fmt.Println("package tok")
 		fmt.Println()
-		fmt.Println(`import "github.com/client9/pos"`)
+		fmt.Println(`import "github.com/client9/chunky"`)
 		fmt.Println()
-		fmt.Println("var wordtagmap = map[string][]chunky.Tag{")
+		fmt.Println("var wordtagmap = map[string]chunky.Tag{")
 		for _, word := range words {
-			tags := outmap[word]
-			parts := make([]string, len(tags))
-			for i, t := range tags {
-				parts[i] = "chunky." + tagGoName[t]
+			bits := outmap[word]
+			var parts []string
+			for _, tag := range chunky.AllTags {
+				if bits&tag != 0 {
+					parts = append(parts, tagGoName[tag])
+				}
 			}
-			fmt.Printf("\t%q: {%s},\n", word, strings.Join(parts, ", "))
+			fmt.Printf("\t%q: %s,\n", word, strings.Join(parts, " | "))
 		}
 		fmt.Println("}")
 	} else if *csvMode {
-		// Sort words for deterministic output.
 		words := make([]string, 0, len(outmap))
 		for w := range outmap {
 			words = append(words, w)
@@ -160,11 +149,9 @@ func main() {
 		sort.Strings(words)
 
 		w := csv.NewWriter(os.Stdout)
-		w.Write([]string{"word", "tag"})
+		w.Write([]string{"word", "tags"})
 		for _, word := range words {
-			for _, tag := range outmap[word] {
-				w.Write([]string{word, tag.String()})
-			}
+			w.Write([]string{word, outmap[word].String()})
 		}
 		w.Flush()
 		if err := w.Error(); err != nil {

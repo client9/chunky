@@ -20,10 +20,10 @@ func DisambiguateThen(tokens []Token) []Token {
 			continue
 		}
 		tag := chunky.Tag(chunky.TagADV)
-		if i > 0 && len(tokens[i-1].Tags) == 1 && tokens[i-1].Tags[0] == chunky.TagDET {
+		if i > 0 && tokens[i-1].IsResolved() && tokens[i-1].Tags == chunky.TagDET {
 			tag = chunky.TagADJ
 		}
-		tokens[i].Tags = []chunky.Tag{tag}
+		tokens[i].Tags = tag
 		tokens[i].Rule = t.Rule + "+then"
 	}
 	return tokens

@@ -7,7 +7,11 @@ import (
 )
 
 func makeToken(word string, tags ...chunky.Tag) Token {
-	return Token{Word: word, Tags: tags}
+	var combined chunky.Tag
+	for _, t := range tags {
+		combined |= t
+	}
+	return Token{Word: word, Tags: combined}
 }
 
 // Single-rule tests: prev tag controls NOUN vs VERB resolution.
@@ -26,7 +30,7 @@ func TestDisambiguateWith_DETprev(t *testing.T) {
 		makeToken("run", chunky.TagNOUN, chunky.TagVERB),
 	}
 	out := disambiguateWith(tokens, singleSlotRules)
-	if len(out[1].Tags) != 1 || out[1].Tags[0] != chunky.TagNOUN {
+	if !out[1].IsResolved() || out[1].Tags != chunky.TagNOUN {
 		t.Errorf("DET prev: got %v, want NOUN", out[1].Tags)
 	}
 }
@@ -37,7 +41,7 @@ func TestDisambiguateWith_AUXprev(t *testing.T) {
 		makeToken("run", chunky.TagNOUN, chunky.TagVERB),
 	}
 	out := disambiguateWith(tokens, singleSlotRules)
-	if len(out[1].Tags) != 1 || out[1].Tags[0] != chunky.TagVERB {
+	if !out[1].IsResolved() || out[1].Tags != chunky.TagVERB {
 		t.Errorf("AUX prev: got %v, want VERB", out[1].Tags)
 	}
 }
@@ -49,8 +53,8 @@ func TestDisambiguateWith_NoMatch(t *testing.T) {
 		makeToken("run", chunky.TagNOUN, chunky.TagVERB),
 	}
 	out := disambiguateWith(tokens, singleSlotRules)
-	if len(out[1].Tags) != 2 {
-		t.Errorf("no match: got %v, want unchanged {NOUN,VERB}", out[1].Tags)
+	if out[1].IsResolved() {
+		t.Errorf("no match: got %v, want unchanged NOUN|VERB", out[1].Tags)
 	}
 }
 
@@ -60,7 +64,7 @@ func TestDisambiguateWith_AlreadyUnambiguous(t *testing.T) {
 		makeToken("cat", chunky.TagNOUN),
 	}
 	out := disambiguateWith(tokens, singleSlotRules)
-	if len(out[1].Tags) != 1 || out[1].Tags[0] != chunky.TagNOUN {
+	if !out[1].IsResolved() || out[1].Tags != chunky.TagNOUN {
 		t.Errorf("already unambiguous: got %v, want NOUN", out[1].Tags)
 	}
 	if out[1].Rule != "" {
@@ -74,35 +78,28 @@ func TestDisambiguateWith_AmbiguousNeighborBlocks(t *testing.T) {
 		makeToken("the", chunky.TagNOUN, chunky.TagVERB), // ambiguous neighbor
 		makeToken("run", chunky.TagNOUN, chunky.TagVERB),
 	}
-	// Even though DET would resolve token[1] to NOUN, token[0] is ambiguous
-	// so the rule cannot fire for token[1].
 	out := disambiguateWith(tokens, singleSlotRules)
-	if len(out[1].Tags) != 2 {
-		t.Errorf("ambiguous neighbor: got %v, want unchanged {NOUN,VERB}", out[1].Tags)
+	if out[1].IsResolved() {
+		t.Errorf("ambiguous neighbor: got %v, want unchanged NOUN|VERB", out[1].Tags)
 	}
 }
 
 // Multi-pass cascade: right-to-left dependency needs a second pass.
-// tokens: [NOUN/VERB, NOUN/VERB, NOUN]
-// rule "next=NOUN → VERB": token[1] resolves in pass 1 (next=NOUN),
-// then token[0] resolves in pass 2 (next now = VERB, which is unambiguous).
 func TestDisambiguateWith_MultiPassCascade(t *testing.T) {
 	cascadeRules := []ContextRule{
-		// next=NOUN → VERB
 		{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Next: chunky.TagNOUN, Mask: maskNext, Resolve: chunky.TagVERB},
-		// next=VERB → VERB (so token[0] resolves once token[1] is VERB)
 		{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Next: chunky.TagVERB, Mask: maskNext, Resolve: chunky.TagVERB},
 	}
 	tokens := []Token{
-		makeToken("state", chunky.TagNOUN, chunky.TagVERB), // pass 2: next=VERB → VERB
-		makeToken("time", chunky.TagNOUN, chunky.TagVERB),  // pass 1: next=NOUN → VERB
+		makeToken("state", chunky.TagNOUN, chunky.TagVERB),
+		makeToken("time", chunky.TagNOUN, chunky.TagVERB),
 		makeToken("laws", chunky.TagNOUN),
 	}
 	out := disambiguateWith(tokens, cascadeRules)
-	if len(out[0].Tags) != 1 || out[0].Tags[0] != chunky.TagVERB {
+	if !out[0].IsResolved() || out[0].Tags != chunky.TagVERB {
 		t.Errorf("cascade token[0]: got %v, want VERB", out[0].Tags)
 	}
-	if len(out[1].Tags) != 1 || out[1].Tags[0] != chunky.TagVERB {
+	if !out[1].IsResolved() || out[1].Tags != chunky.TagVERB {
 		t.Errorf("cascade token[1]: got %v, want VERB", out[1].Tags)
 	}
 }
@@ -110,39 +107,32 @@ func TestDisambiguateWith_MultiPassCascade(t *testing.T) {
 // Sentence boundary: TagUNK in an active slot must match only an absent neighbor.
 func TestDisambiguateWith_BoundarySlot(t *testing.T) {
 	boundaryRules := []ContextRule{
-		// sentence-initial (no prev) + next=DET → NOUN
 		{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Prev: chunky.TagUNK, Next: chunky.TagDET, Mask: maskPrev | maskNext, Resolve: chunky.TagNOUN},
 	}
-	// Token at position 0: no prev, next=DET → should fire.
 	tokens := []Token{
 		makeToken("State", chunky.TagNOUN, chunky.TagVERB),
 		makeToken("the", chunky.TagDET),
 	}
 	out := disambiguateWith(tokens, boundaryRules)
-	if len(out[0].Tags) != 1 || out[0].Tags[0] != chunky.TagNOUN {
+	if !out[0].IsResolved() || out[0].Tags != chunky.TagNOUN {
 		t.Errorf("boundary match: got %v, want NOUN", out[0].Tags)
 	}
 
-	// Same rule should NOT fire when there is a real prev token.
 	tokens2 := []Token{
 		makeToken("will", chunky.TagAUX),
 		makeToken("state", chunky.TagNOUN, chunky.TagVERB),
 		makeToken("the", chunky.TagDET),
 	}
 	out2 := disambiguateWith(tokens2, boundaryRules)
-	if len(out2[1].Tags) != 2 {
-		t.Errorf("boundary non-match: got %v, want unchanged {NOUN,VERB}", out2[1].Tags)
+	if out2[1].IsResolved() {
+		t.Errorf("boundary non-match: got %v, want unchanged NOUN|VERB", out2[1].Tags)
 	}
 }
 
 // Specificity: a 2-slot rule must not override a matching 4-slot rule.
-// The 4-slot rule resolves to VERB; the 2-slot rule would resolve to NOUN.
-// Since rules are ordered most-specific-first, VERB wins.
 func TestDisambiguateWith_SpecificityOrder(t *testing.T) {
 	rules := []ContextRule{
-		// 4-slot: DET+ADJ+ADP+NOUN → VERB (very specific)
 		{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Prev2: chunky.TagDET, Prev: chunky.TagADJ, Next: chunky.TagADP, Next2: chunky.TagNOUN, Mask: 0x0f, Resolve: chunky.TagVERB},
-		// 1-slot: prev=ADJ → NOUN (less specific)
 		{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Prev: chunky.TagADJ, Mask: maskPrev, Resolve: chunky.TagNOUN},
 	}
 	tokens := []Token{
@@ -153,7 +143,7 @@ func TestDisambiguateWith_SpecificityOrder(t *testing.T) {
 		makeToken("mind", chunky.TagNOUN),
 	}
 	out := disambiguateWith(tokens, rules)
-	if len(out[2].Tags) != 1 || out[2].Tags[0] != chunky.TagVERB {
+	if !out[2].IsResolved() || out[2].Tags != chunky.TagVERB {
 		t.Errorf("specificity: got %v, want VERB (4-slot rule wins)", out[2].Tags)
 	}
 }
@@ -162,7 +152,7 @@ func TestDisambiguateWith_SpecificityOrder(t *testing.T) {
 func TestDisambiguateWith_RuleField(t *testing.T) {
 	tokens := []Token{
 		makeToken("the", chunky.TagDET),
-		{Word: "run", Tags: []chunky.Tag{chunky.TagNOUN, chunky.TagVERB}, Rule: "lexicon"},
+		{Word: "run", Tags: chunky.TagNOUN | chunky.TagVERB, Rule: "lexicon"},
 	}
 	out := disambiguateWith(tokens, singleSlotRules)
 	if out[1].Rule != "lexicon+ctx" {

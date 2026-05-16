@@ -16,13 +16,13 @@ func DisambiguateThat(tokens []Token) []Token {
 		if !t.HasTag(chunky.TagPRON) || !t.HasTag(chunky.TagSCONJ) || !t.HasTag(chunky.TagDET) {
 			continue
 		}
-		if i+1 >= len(tokens) || len(tokens[i+1].Tags) == 0 {
+		if i+1 >= len(tokens) || tokens[i+1].IsUnknownTag() {
 			continue
 		}
-		if tokens[i+1].Tags[0] != chunky.TagDET {
+		if tokens[i+1].Tags != chunky.TagDET {
 			continue
 		}
-		tokens[i].Tags = []chunky.Tag{chunky.TagSCONJ}
+		tokens[i].Tags = chunky.TagSCONJ
 		tokens[i].Rule = t.Rule + "+that"
 	}
 	return tokens

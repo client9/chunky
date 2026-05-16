@@ -33,7 +33,7 @@ func TestRetagCapitalized(t *testing.T) {
 			t.Errorf("Parse(%q): token %q not found", tc.input, tc.word)
 			continue
 		}
-		if len(found.Tags) == 0 || found.Tags[0] != tc.want {
+		if found.IsUnknownTag() || !found.HasTag(tc.want) {
 			t.Errorf("Parse(%q) %q: got %v, want %v", tc.input, tc.word, found.Tags, tc.want)
 		}
 	}

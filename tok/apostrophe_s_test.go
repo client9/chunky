@@ -11,8 +11,8 @@ func tagOf(sents []Sentence, word string) (chunky.Tag, bool) {
 	for _, s := range sents {
 		for _, tok := range s.Tokens {
 			if tok.Word == word {
-				if len(tok.Tags) == 1 {
-					return tok.Tags[0], true
+				if tok.IsResolved() {
+					return tok.Tags, true
 				}
 				return 0, false // ambiguous
 			}
@@ -59,7 +59,7 @@ func TestDisambiguateApostropheS(t *testing.T) {
 			t.Errorf("Parse(%q): no \"'s\" token found", tc.input)
 			continue
 		}
-		if len(apostropheS.Tags) == 0 || apostropheS.Tags[0] != tc.want {
+		if apostropheS.Tags != tc.want {
 			t.Errorf("Parse(%q) \"'s\": got %v, want %v", tc.input, apostropheS.Tags, tc.want)
 		}
 	}

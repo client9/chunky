@@ -184,15 +184,7 @@ func spanTags(sent []conllToken, s span) string {
 func spanPredTags(tagged []tok.Token, s span) string {
 	parts := make([]string, s.end-s.start)
 	for i, t := range tagged[s.start:s.end] {
-		if len(t.Tags) == 1 {
-			parts[i] = t.Tags[0].String()
-		} else {
-			tags := make([]string, len(t.Tags))
-			for j, tag := range t.Tags {
-				tags[j] = tag.String()
-			}
-			parts[i] = strings.Join(tags, "/")
-		}
+		parts[i] = t.String()[len(t.Word)+1:] // strip "word/" prefix
 	}
 	return strings.Join(parts, " ")
 }

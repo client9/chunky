@@ -6,37 +6,58 @@ import "github.com/client9/chunky"
 // over the UD tag sequence.
 func Chunk(tokens []Token) []Token {
 	for i := 0; i < len(tokens); {
-		if len(tokens[i].Tags) == 0 {
+		if tokens[i].IsUnknownTag() {
 			i++
 			continue
 		}
-		switch tokens[i].Tags[0] {
+		switch tokens[i].Tags {
 		case chunky.TagDET, chunky.TagADJ, chunky.TagNOUN, chunky.TagPROPN, chunky.TagNUM, chunky.TagPRON:
 			i = markNP(tokens, i)
 		case chunky.TagPART:
 			if isInfinitival(tokens, i) {
-				// Infinitival "to" before a VERB starts a VP.
 				i = markVP(tokens, i)
 			} else {
 				i++
 			}
 		case chunky.TagADP:
 			if isInfinitival(tokens, i) {
-				// "to/ADP" before a VERB is infinitival; start VP.
 				i = markVP(tokens, i)
 			} else {
 				tokens[i].Chunk = chunky.ChunkTag{IOB: 'B', Kind: chunky.ChunkPP}
 				i++
 			}
 		case chunky.TagAUX, chunky.TagVERB:
-			// Possessive 's is always O — never a chunk head.
 			if tokens[i].Word == "'s" {
 				i++
 			} else {
 				i = markVP(tokens, i)
 			}
 		default:
-			i++
+			// Handle common ambiguous combinations.
+			switch {
+			case tokens[i].HasTag(chunky.TagAUX):
+				// AUX|NOUN (will, may) → start VP
+				if tokens[i].Word == "'s" {
+					i++
+				} else {
+					i = markVP(tokens, i)
+				}
+			case tokens[i].HasTag(chunky.TagADP) || tokens[i].HasTag(chunky.TagPART):
+				// ADP|PART (to) — check infinitival first
+				if isInfinitival(tokens, i) {
+					i = markVP(tokens, i)
+				} else if tokens[i].HasTag(chunky.TagADP) {
+					tokens[i].Chunk = chunky.ChunkTag{IOB: 'B', Kind: chunky.ChunkPP}
+					i++
+				} else {
+					i++
+				}
+			case tokens[i].HasTag(chunky.TagNOUN) || tokens[i].HasTag(chunky.TagPROPN) || tokens[i].HasTag(chunky.TagDET):
+				// NOUN|VERB, DET|PRON, etc. — try NP
+				i = markNP(tokens, i)
+			default:
+				i++
+			}
 		}
 	}
 	return tokens
@@ -49,7 +70,7 @@ func isInfinitival(tokens []Token, i int) bool {
 	if tok.Word != "to" {
 		return false
 	}
-	if i+1 >= len(tokens) || len(tokens[i+1].Tags) == 0 {
+	if i+1 >= len(tokens) || tokens[i+1].IsUnknownTag() {
 		return false
 	}
 	return tokens[i+1].HasTag(chunky.TagVERB)
@@ -62,7 +83,7 @@ func markNP(tokens []Token, start int) int {
 	}
 	// Suppress NPs that consist only of a bare DET — "the", "a", "an" alone
 	// are never chunk heads in CoNLL-2000 style.
-	if i == start+1 && len(tokens[start].Tags) > 0 && tokens[start].Tags[0] == chunky.TagDET {
+	if i == start+1 && tokens[start].Tags == chunky.TagDET {
 		return i
 	}
 	tokens[start].Chunk = chunky.ChunkTag{IOB: 'B', Kind: chunky.ChunkNP}
@@ -74,14 +95,16 @@ func markNP(tokens []Token, start int) int {
 
 // isNPCont returns true if tok can continue (I-NP) a noun phrase in progress.
 func isNPCont(tok Token) bool {
-	if len(tok.Tags) == 0 {
+	if tok.IsUnknownTag() {
 		return false
 	}
-	switch tok.Tags[0] {
+	switch tok.Tags {
 	case chunky.TagADJ, chunky.TagNOUN, chunky.TagPROPN, chunky.TagNUM:
 		return true
 	}
-	return false
+	// Ambiguous NOUN|VERB or PROPN-having tokens can continue NPs;
+	// DisambiguateByChunk will resolve them using chunk context.
+	return tok.HasTag(chunky.TagNOUN) || tok.HasTag(chunky.TagPROPN)
 }
 
 func markVP(tokens []Token, start int) int {
@@ -95,39 +118,33 @@ func markVP(tokens []Token, start int) int {
 }
 
 // isVPCont returns true if the token at i can continue (I-VP) a verb phrase.
-// ADV, PART, and infinitival ADP "to" only extend a VP when a verbal token
-// follows — a trailing negation particle or bare adverb does not stay inside.
-// NOUN/VERB ambiguous tokens are treated as verbal when inside an active VP.
 func isVPCont(tokens []Token, i int) bool {
-	if i >= len(tokens) || len(tokens[i].Tags) == 0 {
+	if i >= len(tokens) || tokens[i].IsUnknownTag() {
 		return false
 	}
 	tok := tokens[i]
-	switch tok.Tags[0] {
-	case chunky.TagAUX, chunky.TagVERB:
+	if tok.Tags == chunky.TagAUX || tok.Tags == chunky.TagVERB {
 		return true
-	case chunky.TagNOUN, chunky.TagADJ:
-		return tok.HasTag(chunky.TagVERB)
-	case chunky.TagADV:
-		// "n't" / "not" are always O in CoNLL-2000, never inside VP.
+	}
+	// Ambiguous NOUN/VERB or ADJ/VERB — treat as verbal inside VP.
+	if tok.HasTag(chunky.TagVERB) && (tok.HasTag(chunky.TagNOUN) || tok.HasTag(chunky.TagADJ)) {
+		return true
+	}
+	if tok.Tags == chunky.TagADV {
 		if tok.Word == "n't" || tok.Word == "not" {
 			return false
 		}
-		// Other adverbs continue VP only when a verbal token follows.
 		return i+1 < len(tokens) && isVerbal(tokens[i+1])
-	case chunky.TagPART:
-		// Infinitival "to" (PART) continues VP only when a VERB follows.
+	}
+	if tok.Tags == chunky.TagPART {
 		return i+1 < len(tokens) && isVerbal(tokens[i+1])
-	case chunky.TagADP:
-		// Infinitival "to" (ADP) inside a VP chain: "has helped to prevent".
+	}
+	if tok.Tags == chunky.TagADP {
 		return tok.Word == "to" && i+1 < len(tokens) && isVerbal(tokens[i+1])
 	}
 	return false
 }
 
 func isVerbal(tok Token) bool {
-	if len(tok.Tags) == 0 {
-		return false
-	}
-	return tok.Tags[0] == chunky.TagVERB || tok.Tags[0] == chunky.TagAUX
+	return tok.Tags == chunky.TagVERB || tok.Tags == chunky.TagAUX
 }

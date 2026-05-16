@@ -11,7 +11,7 @@ import "github.com/client9/chunky"
 //   - ADP/PART  inside a VP → PART (infinitival "to")
 func DisambiguateByChunk(tokens []Token) []Token {
 	for i, tok := range tokens {
-		if len(tok.Tags) <= 1 {
+		if tok.IsResolved() || tok.IsUnknownTag() {
 			continue
 		}
 		kind := tok.Chunk.Kind
@@ -21,31 +21,31 @@ func DisambiguateByChunk(tokens []Token) []Token {
 		switch {
 		case tok.HasTag(chunky.TagNOUN) && tok.HasTag(chunky.TagVERB):
 			if kind == chunky.ChunkVP {
-				tokens[i].Tags = []chunky.Tag{chunky.TagVERB}
+				tokens[i].Tags = chunky.TagVERB
 				tokens[i].Rule = tok.Rule + "+chunk"
 			} else if kind == chunky.ChunkNP {
-				tokens[i].Tags = []chunky.Tag{chunky.TagNOUN}
+				tokens[i].Tags = chunky.TagNOUN
 				tokens[i].Rule = tok.Rule + "+chunk"
 			}
 		case tok.HasTag(chunky.TagADJ) && tok.HasTag(chunky.TagVERB):
 			if kind == chunky.ChunkVP {
-				tokens[i].Tags = []chunky.Tag{chunky.TagVERB}
+				tokens[i].Tags = chunky.TagVERB
 				tokens[i].Rule = tok.Rule + "+chunk"
 			} else if kind == chunky.ChunkNP {
-				tokens[i].Tags = []chunky.Tag{chunky.TagADJ}
+				tokens[i].Tags = chunky.TagADJ
 				tokens[i].Rule = tok.Rule + "+chunk"
 			}
 		case tok.HasTag(chunky.TagADP) && tok.HasTag(chunky.TagPART):
 			if kind == chunky.ChunkVP {
-				tokens[i].Tags = []chunky.Tag{chunky.TagPART}
+				tokens[i].Tags = chunky.TagPART
 				tokens[i].Rule = tok.Rule + "+chunk"
 			}
 		case tok.HasTag(chunky.TagAUX) && tok.HasTag(chunky.TagNOUN):
 			if kind == chunky.ChunkVP {
-				tokens[i].Tags = []chunky.Tag{chunky.TagAUX}
+				tokens[i].Tags = chunky.TagAUX
 				tokens[i].Rule = tok.Rule + "+chunk"
 			} else if kind == chunky.ChunkNP {
-				tokens[i].Tags = []chunky.Tag{chunky.TagNOUN}
+				tokens[i].Tags = chunky.TagNOUN
 				tokens[i].Rule = tok.Rule + "+chunk"
 			}
 		}

@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -36,12 +35,8 @@ func main() {
 
 		for sn, s := range sentences {
 			for _, t := range s.Tokens {
-				parts := make([]string, len(t.Tags))
-				for i, tag := range t.Tags {
-					parts[i] = tag.String()
-				}
-				tags := strings.Join(parts, ", ")
-				if tags == "" {
+				tags := t.String()[len(t.Word)+1:] // strip "word/" prefix
+				if t.IsUnknownTag() {
 					tags = "**UNK**"
 				}
 				fmt.Printf("| %d | %d | %s | %s | %s |\n", sn+1, t.Offset, t.Word, tags, t.Rule)

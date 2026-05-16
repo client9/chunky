@@ -18,11 +18,11 @@ func DisambiguateMay(tokens []Token) []Token {
 		}
 		switch t.Word {
 		case "may":
-			tokens[i].Tags = []chunky.Tag{chunky.TagAUX}
+			tokens[i].Tags = chunky.TagAUX
 			tokens[i].Rule = t.Rule + "+may"
 		case "May":
 			if i+1 < len(tokens) && tokens[i+1].HasTag(chunky.TagNUM) {
-				tokens[i].Tags = []chunky.Tag{chunky.TagPROPN}
+				tokens[i].Tags = chunky.TagPROPN
 				tokens[i].Rule = t.Rule + "+may"
 			}
 		}
@@ -47,7 +47,7 @@ func RetagMay(tokens []Token) []Token {
 	if len(tokens) > 1 && tokens[1].HasTag(chunky.TagPRON) {
 		tag = chunky.TagAUX
 	}
-	tokens[0].Tags = []chunky.Tag{tag}
+	tokens[0].Tags = tag
 	tokens[0].Rule = t.Rule + "+may"
 	return tokens
 }

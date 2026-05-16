@@ -29,7 +29,7 @@ func MergeLexical(tokens []Token) []Token {
 				out = append(out, Token{
 					Word:   strings.Join(surface, " "),
 					Offset: tokens[i].Offset,
-					Tags:   []Tag{tag},
+					Tags:   tag,
 					Rule:   "compound",
 				})
 				i += length

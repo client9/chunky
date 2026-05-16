@@ -65,16 +65,12 @@ func main() {
 				}
 				for _, s := range tok.Parse(sentence) {
 					for _, t := range s.Tokens {
-						if len(t.Tags) <= 1 {
+						if t.IsResolved() || t.IsUnknownTag() {
 							continue
 						}
 						freq[t.Word]++
 						if _, seen := tagSets[t.Word]; !seen {
-							parts := make([]string, len(t.Tags))
-							for i, tag := range t.Tags {
-								parts[i] = tag.String()
-							}
-							tagSets[t.Word] = strings.Join(parts, " ")
+							tagSets[t.Word] = t.String()[len(t.Word)+1:]
 						}
 					}
 				}

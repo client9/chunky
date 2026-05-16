@@ -72,11 +72,6 @@ func tokWords(tokens []Token) []string {
 	return out
 }
 
-func hasTag(tags []chunky.Tag, want chunky.Tag) bool {
-	for _, tg := range tags {
-		if tg == want {
-			return true
-		}
-	}
-	return false
+func hasTag(tags chunky.Tag, want chunky.Tag) bool {
+	return tags&want != 0
 }

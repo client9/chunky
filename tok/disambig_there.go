@@ -25,7 +25,7 @@ func DisambiguateThere(tokens []Token) []Token {
 				tag = chunky.TagPRON
 			}
 		}
-		tokens[i].Tags = []chunky.Tag{tag}
+		tokens[i].Tags = tag
 		tokens[i].Rule = t.Rule + "+there"
 	}
 	return tokens

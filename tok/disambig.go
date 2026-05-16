@@ -44,33 +44,26 @@ func matchSlot(want chunky.Tag, tok Token, active bool) bool {
 		// Active TagUNK means "must be sentence boundary/absent."
 		return tok.Word == ""
 	}
-	return len(tok.Tags) == 1 && tok.Tags[0] == want
+	return tok.IsResolved() && tok.Tags == want
 }
 
-// CopyTags returns a snapshot of the Tags slice of each token, for change detection.
-func CopyTags(tokens []Token) [][]chunky.Tag {
-	out := make([][]chunky.Tag, len(tokens))
+// CopyTags returns a snapshot of each token's Tags for change detection.
+func CopyTags(tokens []Token) []chunky.Tag {
+	out := make([]chunky.Tag, len(tokens))
 	for i, t := range tokens {
-		cp := make([]chunky.Tag, len(t.Tags))
-		copy(cp, t.Tags)
-		out[i] = cp
+		out[i] = t.Tags
 	}
 	return out
 }
 
 // TagsEqual reports whether tokens have the same Tags as the snapshot produced by CopyTags.
-func TagsEqual(tokens []Token, snap [][]chunky.Tag) bool {
+func TagsEqual(tokens []Token, snap []chunky.Tag) bool {
 	if len(tokens) != len(snap) {
 		return false
 	}
 	for i, t := range tokens {
-		if len(t.Tags) != len(snap[i]) {
+		if t.Tags != snap[i] {
 			return false
-		}
-		for j, tag := range t.Tags {
-			if tag != snap[i][j] {
-				return false
-			}
 		}
 	}
 	return true
@@ -81,7 +74,7 @@ func TagsEqual(tokens []Token, snap [][]chunky.Tag) bool {
 func applyRules(tokens []Token, rules []ContextRule) bool {
 	changed := false
 	for i, tok := range tokens {
-		if len(tok.Tags) <= 1 {
+		if tok.IsResolved() || tok.IsUnknownTag() {
 			continue
 		}
 		var prev2, prev, next, next2 Token
@@ -113,7 +106,7 @@ func applyRules(tokens []Token, rules []ContextRule) bool {
 			if !matchSlot(r.Next2, next2, r.Mask&maskNext2 != 0) {
 				continue
 			}
-			tokens[i].Tags = []chunky.Tag{r.Resolve}
+			tokens[i].Tags = r.Resolve
 			tokens[i].Rule = tokens[i].Rule + "+ctx"
 			changed = true
 			break

@@ -35,18 +35,18 @@ func DisambiguateApostropheS(tokens []Token) []Token {
 		if i > 0 && auxHosts[strings.ToLower(tokens[i-1].Word)] {
 			tag = chunky.TagAUX
 		}
-		tokens[i].Tags = []chunky.Tag{tag}
+		tokens[i].Tags = tag
 		tokens[i].Rule = "apostrophe-s"
 
 		if tag == chunky.TagPART {
 			// Possessor: the token before a possessive "'s" is always a noun.
 			if i > 0 && tokens[i-1].HasTag(chunky.TagNOUN) && tokens[i-1].HasTag(chunky.TagVERB) {
-				tokens[i-1].Tags = []chunky.Tag{chunky.TagNOUN}
+				tokens[i-1].Tags = chunky.TagNOUN
 				tokens[i-1].Rule = tokens[i-1].Rule + "+poss-host"
 			}
 			// Possessed head: the token after a possessive "'s" is always a noun.
 			if i+1 < len(tokens) && tokens[i+1].HasTag(chunky.TagNOUN) && tokens[i+1].HasTag(chunky.TagVERB) {
-				tokens[i+1].Tags = []chunky.Tag{chunky.TagNOUN}
+				tokens[i+1].Tags = chunky.TagNOUN
 				tokens[i+1].Rule = tokens[i+1].Rule + "+poss-head"
 			}
 		}

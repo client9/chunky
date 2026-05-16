@@ -22,25 +22,24 @@ func DisambiguateWill(tokens []Token) []Token {
 			continue
 		}
 		next := tokens[i+1]
-		// DET immediately before "will" → always a noun phrase head.
 		var resolve chunky.Tag
-		if i > 0 && len(tokens[i-1].Tags) == 1 && tokens[i-1].Tags[0] == chunky.TagDET {
+		if i > 0 && tokens[i-1].IsResolved() && tokens[i-1].Tags == chunky.TagDET {
 			resolve = chunky.TagNOUN
 		} else {
 			switch {
-			case next.HasTag(chunky.TagVERB):
-				// "will go", "will return" — modal before main verb
+			case next.HasTag(chunky.TagVERB), next.HasTag(chunky.TagAUX):
+				// "will go", "will be" — modal before verbal
 				resolve = chunky.TagAUX
 			case next.HasTag(chunky.TagADV), next.HasTag(chunky.TagPART):
-				// "will not", "will never", "will also" — adverb separates modal from verb
+				// "will not", "will never"
 				resolve = chunky.TagAUX
 			case next.HasTag(chunky.TagPRON):
-				// "will he?", "will they?" — interrogative inversion
+				// "will he?" — interrogative inversion
 				resolve = chunky.TagAUX
 			}
 		}
 		if resolve != 0 {
-			tokens[i].Tags = []chunky.Tag{resolve}
+			tokens[i].Tags = resolve
 			tokens[i].Rule = t.Rule + "+will"
 		}
 	}
