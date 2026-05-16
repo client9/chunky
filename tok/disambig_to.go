@@ -32,7 +32,7 @@ func DisambiguateTo(tokens []Token) []Token {
 			resolve = TagADP // "to war", "to victory" (pure noun)
 		case resolvedAs(prev, TagAUX):
 			resolve = TagPART // "should to", "need to", "have to", "going to"
-		case next.HasTag(TagADP | TagADV) && !next.HasTag(TagNOUN | TagVERB):
+		case next.HasTag(TagADP|TagADV) && !next.HasTag(TagNOUN|TagVERB):
 			resolve = TagADP // "to out", "to far" — prepositional use
 		case next.HasTag(TagPUNCT):
 			resolve = TagADP // sentence-ending "to." is prepositional

@@ -6,26 +6,29 @@ import "strings"
 // and demonstratives.
 //
 // Quantifiers (each, some, any):
-//   DET: "each team", "some water", "any questions"
-//   PRON: "they each have", "some of us", "each of them"
+//
+//	DET: "each team", "some water", "any questions"
+//	PRON: "they each have", "some of us", "each of them"
 //
 // Demonstratives (this, these, those):
-//   DET:  "this decision", "these issues", "those teams"
-//   PRON: "this is clear", "these are done", "of those"
+//
+//	DET:  "this decision", "these issues", "those teams"
+//	PRON: "this is clear", "these are done", "of those"
 //
 // Resolved cases:
-//   quantifiers:
-//   - next=ADP                              → PRON ("each of them")
-//   - prev=PRON|NOUN|PROPN + next=VERB|AUX → PRON (floating: "they each have")
-//   - next=NOUN|PROPN (unambiguous)         → DET (prenominal)
-//   - next=ADJ (unambiguous)                → DET ("each individual")
-//   - resolvedAs(next, VERB)                → PRON ("some argue")
 //
-//   demonstratives:
-//   - next=NOUN|ADJ|PROPN|NUM (unambiguous) → DET ("this decision")
-//   - next=VERB|AUX                         → PRON ("this is clear")
-//   - next=PUNCT|CCONJ                      → PRON ("this.", "these,")
-//   - resolvedAs(prev, ADP) + no following noun → PRON ("of those")
+//	quantifiers:
+//	- next=ADP                              → PRON ("each of them")
+//	- prev=PRON|NOUN|PROPN + next=VERB|AUX → PRON (floating: "they each have")
+//	- next=NOUN|PROPN (unambiguous)         → DET (prenominal)
+//	- next=ADJ (unambiguous)                → DET ("each individual")
+//	- resolvedAs(next, VERB)                → PRON ("some argue")
+//
+//	demonstratives:
+//	- next=NOUN|ADJ|PROPN|NUM (unambiguous) → DET ("this decision")
+//	- next=VERB|AUX                         → PRON ("this is clear")
+//	- next=PUNCT|CCONJ                      → PRON ("this.", "these,")
+//	- resolvedAs(prev, ADP) + no following noun → PRON ("of those")
 func DisambiguateDetPron(tokens []Token) []Token {
 	for i, t := range tokens {
 		if !t.HasTag(TagDET) || !t.HasTag(TagPRON) {
@@ -54,7 +57,7 @@ func DisambiguateDetPron(tokens []Token) []Token {
 				resolve = TagDET // "this decision", "these three", "those old"
 			case next.HasTag(TagVERB|TagAUX) && !next.HasTag(TagNOUN):
 				resolve = TagPRON // "this is clear", "these are done" (pure VERB/AUX, not {NOUN,VERB})
-			case next.HasTag(TagPUNCT|TagCCONJ):
+			case next.HasTag(TagPUNCT | TagCCONJ):
 				resolve = TagPRON // "this.", "these,", "those and"
 			case resolvedAs(prev, TagADP) && !next.HasTag(TagNOUN|TagADJ|TagPROPN|TagNUM):
 				resolve = TagPRON // "of those", "in this" (not followed by noun)
@@ -65,14 +68,14 @@ func DisambiguateDetPron(tokens []Token) []Token {
 				resolve = TagDET // "another day", "another three"
 			case next.HasTag(TagADP):
 				resolve = TagPRON // "another of them"
-			case next.HasTag(TagVERB|TagAUX|TagPUNCT):
+			case next.HasTag(TagVERB | TagAUX | TagPUNCT):
 				resolve = TagPRON // "another said", "another."
 			}
 		case "what":
 			switch {
 			case next.HasTag(TagNOUN|TagPROPN|TagADJ|TagNUM) && !next.HasTag(TagVERB|TagAUX):
 				resolve = TagDET // "what year", "what time", "what kind"
-			case next.HasTag(TagVERB|TagAUX|TagPUNCT|TagCCONJ):
+			case next.HasTag(TagVERB | TagAUX | TagPUNCT | TagCCONJ):
 				resolve = TagPRON // "what happened", "what?", "what he said"
 			case resolvedAs(prev, TagVERB) || resolvedAs(prev, TagADP):
 				resolve = TagPRON // "know what", "for what"

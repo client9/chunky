@@ -102,7 +102,7 @@ func DisambiguateAdjAdv(tokens []Token) []Token {
 				resolve = TagADJ // "best option", "long road" (only unambiguous nouns)
 			case prev.HasTag(TagVERB | TagAUX):
 				resolve = TagADV
-			case prev.HasTag(TagPRON | TagNOUN | TagPROPN) && next.HasTag(TagPUNCT):
+			case prev.HasTag(TagPRON|TagNOUN|TagPROPN) && next.HasTag(TagPUNCT):
 				resolve = TagADV // "she knew best.", "he waited long."
 			case resolvedAs(next, TagVERB) || resolvedAs(next, TagAUX):
 				resolve = TagADV // "best served cold", "how long has"

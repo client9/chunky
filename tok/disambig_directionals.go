@@ -10,7 +10,7 @@ import "strings"
 //
 // "north", "east", "west" lexicon: ADJ|NOUN
 //   - prev=DET → NOUN ("the north", "in the east")
-//   otherwise → ADJ  ("north side", "east coast")
+//     otherwise → ADJ  ("north side", "east coast")
 func DisambiguateDirectionals(tokens []Token) []Token {
 	for i, t := range tokens {
 		if !t.HasTag(TagADJ) || !t.HasTag(TagNOUN) {

@@ -83,7 +83,7 @@ func main() {
 		}
 
 		countTotal++
-		if chunky.Tag(combined & (combined - 1)) == 0 { // single bit set
+		if chunky.Tag(combined&(combined-1)) == 0 { // single bit set
 			countUni++
 		}
 

@@ -5,20 +5,22 @@ import "strings"
 // DisambiguateSo resolves the ADV/SCONJ ambiguity on "so" and "once".
 //
 // "so" (ADV 84%, SCONJ 13%):
-//   Intensifier (ADV):   "so good", "so quickly"
-//   Subordinator (SCONJ): "so that everyone could see"
 //
-//   Resolved cases:
-//   - next=ADJ|ADV → ADV   ("so good", "so carefully")
-//   - next=SCONJ   → SCONJ ("so that")
+//	Intensifier (ADV):   "so good", "so quickly"
+//	Subordinator (SCONJ): "so that everyone could see"
+//
+//	Resolved cases:
+//	- next=ADJ|ADV → ADV   ("so good", "so carefully")
+//	- next=SCONJ   → SCONJ ("so that")
 //
 // "once" (ADV 89%, SCONJ 10%):
-//   Frequency/temporal (ADV): "happened once", "had once been", "once again"
-//   Subordinator (SCONJ):     "once the treaty was signed"
 //
-//   Resolved cases:
-//   - prev=AUX|ADV → ADV  ("had once been", "once again" when prev is adverb)
-//   - next=ADV     → ADV  ("once more", "once again")
+//	Frequency/temporal (ADV): "happened once", "had once been", "once again"
+//	Subordinator (SCONJ):     "once the treaty was signed"
+//
+//	Resolved cases:
+//	- prev=AUX|ADV → ADV  ("had once been", "once again" when prev is adverb)
+//	- next=ADV     → ADV  ("once more", "once again")
 //
 // Note: "so that" is handled upstream by MergeLexical as a compound SCONJ token;
 // the next=SCONJ rule catches remaining cases like "so as", "so because".
@@ -53,7 +55,7 @@ func DisambiguateSo(tokens []Token) []Token {
 			}
 		case "once":
 			switch {
-			case prev.HasTag(TagAUX | TagADV) || next.HasTag(TagADV):
+			case prev.HasTag(TagAUX|TagADV) || next.HasTag(TagADV):
 				resolve = TagADV
 			case next.HasTag(TagSCONJ | TagADP):
 				resolve = TagADV // "once upon a time", "once in a while", "once before"

@@ -6,24 +6,24 @@ package chunky
 var WordTags = map[string]Tag{
 	// punctuation overrides — Brown corpus has noise tags on these
 	// (e.g. "," tagged FW-RB-TL, ":" tagged NP/IN)
-	",":      TagPUNCT,
-	".":      TagPUNCT,
-	":":      TagPUNCT,
-	";":      TagPUNCT,
-	"!":      TagPUNCT,
-	"?":      TagPUNCT,
-	"(":      TagPUNCT,
-	")":      TagPUNCT,
-	"-":      TagPUNCT,
-	"--":     TagPUNCT,
-	"{":      TagPUNCT, // TBD - probably strip brace blocks
-	"}":      TagPUNCT, // TBD -
-	"$":      TagSYM,   // as per spaCy
-	"%":      TagNOUN,  // as per spaCy
-	"_":      TagPUNCT,
-	"\"":     TagPUNCT,
-	"–": TagPUNCT, // en dash
-	"—": TagPUNCT, // em dash
+	",":  TagPUNCT,
+	".":  TagPUNCT,
+	":":  TagPUNCT,
+	";":  TagPUNCT,
+	"!":  TagPUNCT,
+	"?":  TagPUNCT,
+	"(":  TagPUNCT,
+	")":  TagPUNCT,
+	"-":  TagPUNCT,
+	"--": TagPUNCT,
+	"{":  TagPUNCT, // TBD - probably strip brace blocks
+	"}":  TagPUNCT, // TBD -
+	"$":  TagSYM,   // as per spaCy
+	"%":  TagNOUN,  // as per spaCy
+	"_":  TagPUNCT,
+	"\"": TagPUNCT,
+	"–":  TagPUNCT, // en dash
+	"—":  TagPUNCT, // em dash
 
 	// Brown corpus assigns DET to these but spaCy/UD always tags them ADJ.
 	// They are gradable prenominal modifiers, never true determiners.
@@ -34,14 +34,14 @@ var WordTags = map[string]Tag{
 	"particular": TagADJ,
 
 	// Brown corpus over-tagged these with JJ; spaCy/UD always ADV (n≥1k).
-	"just":        TagADV,
-	"even":        TagADV,
-	"rather":      TagADV,
-	"indeed":      TagADV,
-	"newly":       TagADV,
-	"similarly":   TagADV,
-	"elsewhere":   TagADV,
-	"everywhere":  TagADV,
+	"just":       TagADV,
+	"even":       TagADV,
+	"rather":     TagADV,
+	"indeed":     TagADV,
+	"newly":      TagADV,
+	"similarly":  TagADV,
+	"elsewhere":  TagADV,
+	"everywhere": TagADV,
 
 	// Brown JJ but always ADJ in practice (n≥500, spaCy ≥96%).
 	"strong":      TagADJ,
@@ -75,17 +75,17 @@ var WordTags = map[string]Tag{
 	"true": TagADJ,
 
 	// {ADJ,ADV,NOUN}: always ADV in prose — Brown noise added ADJ/NOUN.
-	"posthumously":   TagADV,
+	"posthumously":    TagADV,
 	"interchangeably": TagADV,
 
 	// {ADV,NOUN}: used as NOUN modifier in titles ("vice president", "vice versa").
 	"vice": TagNOUN,
 
 	// {ADV,NOUN}: always NOUN in prose (Brown noise added ADV).
-	"offs":      TagNOUN,
-	"branding":  TagNOUN,
-	"ante":      TagNOUN,
-	"meantime":  TagNOUN,
+	"offs":     TagNOUN,
+	"branding": TagNOUN,
+	"ante":     TagNOUN,
+	"meantime": TagNOUN,
 
 	// Brown tagged as NOUN|NUM; NUM in UD for cardinal/quantity use (dominant).
 	// Inflected forms listed explicitly because InflectionCandidates reads wordtagmap
@@ -120,31 +120,31 @@ var WordTags = map[string]Tag{
 	"seeing":      TagVERB,
 
 	// Brown tagged as ADV/DET/PART; spaCy/UD always ADJ (n=19k, 99.7%).
-	"many":        TagADJ,
+	"many": TagADJ,
 
 	// Brown tagged "i"/"me" as PROPN in "CHAPTER I" / title contexts; always PRON in prose.
 	"i":  TagPRON,
 	"me": TagPRON,
 
 	// Brown noise on symbols and conjunctions.
-	"&":           TagCCONJ,
-	"and/or":      TagCCONJ,
+	"&":      TagCCONJ,
+	"and/or": TagCCONJ,
 
 	// Brown tagged as DET; spaCy always DET (n=5k, 95.7%).
-	"every":       TagDET,
+	"every": TagDET,
 
 	// Brown added spurious ADV/ADP tag; spaCy always NOUN (n≥100, ≥95%).
-	"lots":        TagNOUN,
-	"spite":       TagNOUN,
+	"lots":  TagNOUN,
+	"spite": TagNOUN,
 
 	// Brown tagged as NOUN only; should be DET (prenominal: "no reason", "no one").
 	"no": TagDET,
 
 	// gerund-prepositions: these words introduce PP chunks and are never
 	// used as verbs in the prose target; force to ADP to resolve ambiguity.
-	"including":  TagADP,
-	"involving":  TagADP,
-	"regarding":  TagADP,
+	"including": TagADP,
+	"involving": TagADP,
+	"regarding": TagADP,
 
 	// -ede verbs: too few to justify a suffix rule, all clearly VERB
 	"accede":    TagVERB,

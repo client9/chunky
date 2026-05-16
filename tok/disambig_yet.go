@@ -22,7 +22,7 @@ func DisambiguateYet(tokens []Token) []Token {
 		switch {
 		case next.HasTag(TagADV | TagADJ | TagDET | TagNUM | TagPART):
 			resolve = TagADV
-		case prev.HasTag(TagAUX | TagVERB) || resolvedAs(prev, TagPART):
+		case prev.HasTag(TagAUX|TagVERB) || resolvedAs(prev, TagPART):
 			resolve = TagADV
 		case next.HasTag(TagPUNCT):
 			resolve = TagADV // "not yet.", "not decided yet."

@@ -5,13 +5,15 @@ import "strings"
 // DisambiguateAdvNoun resolves frequent {ADV,NOUN} and {ADJ,ADV,DET} words.
 //
 // {ADV,NOUN}:
-//   way:   next=ADV|ADJ → ADV ("way too much", "way ahead"); else → NOUN
-//   brand: next=ADJ     → ADV ("brand new", "brand fresh"); else → NOUN
-//   lot:                → NOUN (always; "a lot of", "lots of")
+//
+//	way:   next=ADV|ADJ → ADV ("way too much", "way ahead"); else → NOUN
+//	brand: next=ADJ     → ADV ("brand new", "brand fresh"); else → NOUN
+//	lot:                → NOUN (always; "a lot of", "lots of")
 //
 // {ADJ,ADV,DET}:
-//   only:  next=VERB|AUX|ADV → ADV; prev=DET → ADJ ("the only one"); next=ADJ → ADV
-//   little: next=NOUN → DET; next=ADJ|ADV → ADV
+//
+//	only:  next=VERB|AUX|ADV → ADV; prev=DET → ADJ ("the only one"); next=ADJ → ADV
+//	little: next=NOUN → DET; next=ADJ|ADV → ADV
 func DisambiguateAdvNoun(tokens []Token) []Token {
 	for i, t := range tokens {
 		lw := strings.ToLower(t.Word)

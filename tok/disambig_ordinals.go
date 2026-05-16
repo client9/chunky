@@ -8,13 +8,16 @@ import "strings"
 // "second", "third" lexicon: ADV|NOUN|NUM
 //
 // Ordinal (NUM): prev=DET|PRON and next=NOUN|ADJ|PROPN — prenominal use
-//   "the first chapter", "my second attempt", "a third party"
+//
+//	"the first chapter", "my second attempt", "a third party"
 //
 // NOUN (second/third only): standalone or time-unit use
-//   "a second", "in a second", "a close third"
+//
+//	"a second", "in a second", "a close third"
 //
 // Sentential adverb (ADV): next=VERB — discourse/sequential use
-//   "first, consider the options", "we must first decide"
+//
+//	"first, consider the options", "we must first decide"
 func DisambiguateOrdinals(tokens []Token) []Token {
 	for i, t := range tokens {
 		if !t.HasTag(TagADV) || !t.HasTag(TagNUM) {
@@ -31,11 +34,11 @@ func DisambiguateOrdinals(tokens []Token) []Token {
 		switch {
 		case prev.HasTag(TagDET|TagPRON) && next.HasTag(TagNOUN|TagADJ|TagPROPN):
 			resolve = TagNUM
-		case prev.HasTag(TagNOUN|TagPROPN):
+		case prev.HasTag(TagNOUN | TagPROPN):
 			resolve = TagNUM // "June first/second/third", "a split second"
 		case resolvedAs(prev, TagADJ):
 			resolve = TagNUM // "a close second", "a strong third"
-		case next.HasTag(TagVERB|TagAUX):
+		case next.HasTag(TagVERB | TagAUX):
 			resolve = TagADV
 		case next.HasTag(TagCCONJ):
 			resolve = TagADV // "first and foremost", "first or last"

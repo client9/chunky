@@ -17,11 +17,11 @@ const (
 // unchecked slots are wildcards. TagUNK in an active slot matches an absent
 // neighbor (sentence boundary).
 type ContextRule struct {
-	Tags            chunky.Tag
-	Prev2, Prev     chunky.Tag
-	Next, Next2     chunky.Tag
-	Mask            uint8
-	Resolve         chunky.Tag
+	Tags        chunky.Tag
+	Prev2, Prev chunky.Tag
+	Next, Next2 chunky.Tag
+	Mask        uint8
+	Resolve     chunky.Tag
 }
 
 // tokenAt returns the token at index i, or a zero Token if i is out of bounds.
