@@ -44,7 +44,7 @@ func matchSlot(want chunky.Tag, tok Token, active bool) bool {
 		// Active TagUNK means "must be sentence boundary/absent."
 		return tok.Word == ""
 	}
-	return tok.IsResolved() && tok.Tags == want
+	return tok.IsResolved() && tok.Tags&want != 0
 }
 
 // CopyTags returns a snapshot of each token's Tags for change detection.
