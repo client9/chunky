@@ -74,6 +74,10 @@ var WordTags = map[string]Tag{
 	// Brown tagged as ADV/DET/PART; spaCy/UD always ADJ (n=19k, 99.7%).
 	"many":        TagADJ,
 
+	// Brown tagged "i"/"me" as PROPN in "CHAPTER I" / title contexts; always PRON in prose.
+	"i":  TagPRON,
+	"me": TagPRON,
+
 	// Brown noise on symbols and conjunctions.
 	"&":           TagCCONJ,
 	"and/or":      TagCCONJ,

@@ -283,10 +283,10 @@ func MorphCandidates(word string, isFirst bool) (chunky.Tag, string) {
 		add(chunky.TagADJ)
 		suffix = "-ic"
 	case strings.HasSuffix(norm, "ing"):
-		add(chunky.TagVERB, chunky.TagNOUN, chunky.TagADJ)
+		add(chunky.TagVERB, chunky.TagNOUN)
 		suffix = "-ing"
 	case strings.HasSuffix(norm, "ed"):
-		add(chunky.TagVERB, chunky.TagADJ)
+		add(chunky.TagVERB)
 		suffix = "-ed"
 	case strings.HasSuffix(norm, "al"):
 		add(chunky.TagADJ, chunky.TagNOUN)
