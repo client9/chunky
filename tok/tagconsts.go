@@ -2,7 +2,10 @@ package tok
 
 import "github.com/client9/chunky"
 
-// Tag constants re-exported from chunky for use in generated rule files.
+// Tag is an alias for chunky.Tag so tok-package files need not import chunky directly.
+type Tag = chunky.Tag
+
+// Tag constants re-exported from chunky so tok-package files need not import chunky directly.
 const (
 	TagUNK   = chunky.TagUNK
 	TagADJ   = chunky.TagADJ

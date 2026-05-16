@@ -8,7 +8,7 @@ import (
 type Tag uint32
 
 const (
-	TagUNK = 1 << iota
+	TagUNK Tag = 1 << iota
 	TagADJ
 	TagADP
 	TagADV
