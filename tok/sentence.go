@@ -67,12 +67,7 @@ func Parse(s string) []Sentence {
 	tokens = chunky.MergeLexical(tokens)
 	tokens = LexicalTag(tokens)
 	tokens = TagUnknowns(tokens)
-	tokens = DisambiguateApostropheS(tokens)
-	tokens = DisambiguateThere(tokens)
-	tokens = DisambiguateMay(tokens)
-	tokens = DisambiguateThat(tokens)
-	tokens = DisambiguateThen(tokens)
-	tokens = DisambiguateWill(tokens)
+	tokens = DisambiguateWords(tokens)
 	return sentencePhase(tokens)
 }
 

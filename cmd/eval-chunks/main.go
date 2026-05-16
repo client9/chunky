@@ -78,8 +78,7 @@ func tagWords(words []string) []tok.Token {
 	tokens = tok.LexicalTag(tokens)
 	tokens = tok.TagUnknowns(tokens)
 	tokens = tok.RetagCapitalized(tokens)
-	tokens = tok.DisambiguateThat(tokens)
-	tokens = tok.DisambiguateWill(tokens)
+	tokens = tok.DisambiguateWords(tokens)
 	for {
 		prev := tok.CopyTags(tokens)
 		tokens = tok.DisambiguateContext(tokens)
