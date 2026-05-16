@@ -1,24 +1,22 @@
 package tok
 
-import "github.com/client9/chunky"
-
 // detPronBroadRules resolves DET/PRON ambiguity (this/these/some/any) using
 // only the immediately following tag. These are 1-slot fallbacks that fire
 // after the more-specific generated rules.
 var detPronBroadRules = []ContextRule{
 	// Before a nominal or pre-nominal modifier → determiner
-	{Tag1: chunky.TagDET, Tag2: chunky.TagPRON, Next: chunky.TagNOUN | chunky.TagPROPN | chunky.TagADJ | chunky.TagNUM, Mask: maskNext, Resolve: chunky.TagDET},
+	{Tags: TagDET | TagPRON, Next: TagNOUN | TagPROPN | TagADJ | TagNUM, Mask: maskNext, Resolve: TagDET},
 	// Before a verbal head or boundary → pronoun
-	{Tag1: chunky.TagDET, Tag2: chunky.TagPRON, Next: chunky.TagAUX | chunky.TagVERB | chunky.TagPUNCT | chunky.TagADP | chunky.TagCCONJ, Mask: maskNext, Resolve: chunky.TagPRON},
+	{Tags: TagDET | TagPRON, Next: TagAUX | TagVERB | TagPUNCT | TagADP | TagCCONJ, Mask: maskNext, Resolve: TagPRON},
 }
 
 // advDetBroadRules resolves ADV/DET ambiguity (most/more/less/much) using
 // only the immediately following tag.
 var advDetBroadRules = []ContextRule{
 	// Before an adjective or adverb → intensifier (ADV): "most important", "more quickly"
-	{Tag1: chunky.TagADV, Tag2: chunky.TagDET, Next: chunky.TagADJ | chunky.TagADV, Mask: maskNext, Resolve: chunky.TagADV},
+	{Tags: TagADV | TagDET, Next: TagADJ | TagADV, Mask: maskNext, Resolve: TagADV},
 	// Before a noun head → quantifier (DET): "most people", "more money"
-	{Tag1: chunky.TagADV, Tag2: chunky.TagDET, Next: chunky.TagNOUN | chunky.TagPROPN, Mask: maskNext, Resolve: chunky.TagDET},
+	{Tags: TagADV | TagDET, Next: TagNOUN | TagPROPN, Mask: maskNext, Resolve: TagDET},
 }
 
 // nounVerbBroadRules resolves NOUN/VERB ambiguity using only the immediately
@@ -30,7 +28,7 @@ var advDetBroadRules = []ContextRule{
 //	next=ADJ   97% VERB   "remains unclear",  "feels right"
 //	next=ADV   89% VERB   "rose sharply",     "fell further"
 var nounVerbBroadRules = []ContextRule{
-	{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Next: chunky.TagPRON | chunky.TagADJ | chunky.TagADV, Mask: maskNext, Resolve: chunky.TagVERB},
+	{Tags: TagNOUN | TagVERB, Next: TagPRON | TagADJ | TagADV, Mask: maskNext, Resolve: TagVERB},
 }
 
 // adpSconjBroadRules resolves ADP/SCONJ ambiguity (after/before/until) using
@@ -41,5 +39,5 @@ var nounVerbBroadRules = []ContextRule{
 // next=NUM/AUX/VERB are 98–100% ADP in corpus; next=ADJ/ADV are also clean.
 // next=DET/PRON/NOUN/PROPN are too mixed (SCONJ also takes NP subjects).
 var adpSconjBroadRules = []ContextRule{
-	{Tag1: chunky.TagADP, Tag2: chunky.TagSCONJ, Next: chunky.TagVERB | chunky.TagAUX | chunky.TagNUM | chunky.TagADJ | chunky.TagADV, Mask: maskNext, Resolve: chunky.TagADP},
+	{Tags: TagADP | TagSCONJ, Next: TagVERB | TagAUX | TagNUM | TagADJ | TagADV, Mask: maskNext, Resolve: TagADP},
 }

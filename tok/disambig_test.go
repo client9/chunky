@@ -17,11 +17,11 @@ func makeToken(word string, tags ...chunky.Tag) Token {
 // Single-rule tests: prev tag controls NOUN vs VERB resolution.
 var singleSlotRules = []ContextRule{
 	// DET before → NOUN
-	{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Prev: chunky.TagDET, Mask: maskPrev, Resolve: chunky.TagNOUN},
+	{Tags: chunky.TagNOUN | chunky.TagVERB, Prev: chunky.TagDET, Mask: maskPrev, Resolve: chunky.TagNOUN},
 	// AUX before → VERB
-	{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Prev: chunky.TagAUX, Mask: maskPrev, Resolve: chunky.TagVERB},
+	{Tags: chunky.TagNOUN | chunky.TagVERB, Prev: chunky.TagAUX, Mask: maskPrev, Resolve: chunky.TagVERB},
 	// NOUN next → VERB
-	{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Next: chunky.TagNOUN, Mask: maskNext, Resolve: chunky.TagVERB},
+	{Tags: chunky.TagNOUN | chunky.TagVERB, Next: chunky.TagNOUN, Mask: maskNext, Resolve: chunky.TagVERB},
 }
 
 func TestDisambiguateWith_DETprev(t *testing.T) {
@@ -87,8 +87,8 @@ func TestDisambiguateWith_AmbiguousNeighborBlocks(t *testing.T) {
 // Multi-pass cascade: right-to-left dependency needs a second pass.
 func TestDisambiguateWith_MultiPassCascade(t *testing.T) {
 	cascadeRules := []ContextRule{
-		{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Next: chunky.TagNOUN, Mask: maskNext, Resolve: chunky.TagVERB},
-		{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Next: chunky.TagVERB, Mask: maskNext, Resolve: chunky.TagVERB},
+		{Tags: chunky.TagNOUN | chunky.TagVERB, Next: chunky.TagNOUN, Mask: maskNext, Resolve: chunky.TagVERB},
+		{Tags: chunky.TagNOUN | chunky.TagVERB, Next: chunky.TagVERB, Mask: maskNext, Resolve: chunky.TagVERB},
 	}
 	tokens := []Token{
 		makeToken("state", chunky.TagNOUN, chunky.TagVERB),
@@ -107,7 +107,7 @@ func TestDisambiguateWith_MultiPassCascade(t *testing.T) {
 // Sentence boundary: TagUNK in an active slot must match only an absent neighbor.
 func TestDisambiguateWith_BoundarySlot(t *testing.T) {
 	boundaryRules := []ContextRule{
-		{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Prev: chunky.TagUNK, Next: chunky.TagDET, Mask: maskPrev | maskNext, Resolve: chunky.TagNOUN},
+		{Tags: chunky.TagNOUN | chunky.TagVERB, Prev: chunky.TagUNK, Next: chunky.TagDET, Mask: maskPrev | maskNext, Resolve: chunky.TagNOUN},
 	}
 	tokens := []Token{
 		makeToken("State", chunky.TagNOUN, chunky.TagVERB),
@@ -132,8 +132,8 @@ func TestDisambiguateWith_BoundarySlot(t *testing.T) {
 // Specificity: a 2-slot rule must not override a matching 4-slot rule.
 func TestDisambiguateWith_SpecificityOrder(t *testing.T) {
 	rules := []ContextRule{
-		{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Prev2: chunky.TagDET, Prev: chunky.TagADJ, Next: chunky.TagADP, Next2: chunky.TagNOUN, Mask: 0x0f, Resolve: chunky.TagVERB},
-		{Tag1: chunky.TagNOUN, Tag2: chunky.TagVERB, Prev: chunky.TagADJ, Mask: maskPrev, Resolve: chunky.TagNOUN},
+		{Tags: chunky.TagNOUN | chunky.TagVERB, Prev2: chunky.TagDET, Prev: chunky.TagADJ, Next: chunky.TagADP, Next2: chunky.TagNOUN, Mask: 0x0f, Resolve: chunky.TagVERB},
+		{Tags: chunky.TagNOUN | chunky.TagVERB, Prev: chunky.TagADJ, Mask: maskPrev, Resolve: chunky.TagNOUN},
 	}
 	tokens := []Token{
 		makeToken("the", chunky.TagDET),

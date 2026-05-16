@@ -14,12 +14,12 @@ const (
 	maskNext2 uint8 = 1 << 0
 )
 
-// ContextRule fires when a token's tag set contains both Tag1 and Tag2
+// ContextRule fires when a token's tag set contains all bits in Tags
 // and the active context slots match. Mask selects which slots are checked;
 // unchecked slots are wildcards. TagUNK in an active slot matches an absent
 // neighbor (sentence boundary).
 type ContextRule struct {
-	Tag1, Tag2      chunky.Tag
+	Tags            chunky.Tag
 	Prev2, Prev     chunky.Tag
 	Next, Next2     chunky.Tag
 	Mask            uint8
@@ -91,7 +91,7 @@ func applyRules(tokens []Token, rules []ContextRule) bool {
 			next2 = tokens[i+2]
 		}
 		for _, r := range rules {
-			if !tok.HasTag(r.Tag1) || !tok.HasTag(r.Tag2) {
+			if tok.Tags&r.Tags != r.Tags {
 				continue
 			}
 			if !matchSlot(r.Prev2, prev2, r.Mask&maskPrev2 != 0) {

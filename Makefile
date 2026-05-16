@@ -8,18 +8,20 @@ help:
 build: ## build module and CLI
 	go build ./...
 
-tok/rules_nounverb_gen.go tok/rules_adjnoun_gen.go tok/rules_adppart_gen.go tok/rules_auxverb_gen.go tok/rules_detpron_gen.go tok/rules_adpsconj_gen.go tok/rules_adjverb_gen.go tok/rules_adjadv_gen.go tok/rules_advdet_gen.go tok/rules_adpadv_gen.go tok/rules_advnum_gen.go: rules.db rules.sh cmd/mkrules/main.go ## regenerate context disambiguation rules from corpus statistics
-	F1=NOUN F2=VERB              bash rules.sh | go run ./cmd/mkrules -tag1 NOUN  -tag2 VERB  -var nounVerbRules  > tok/rules_nounverb_gen.go
-	F1=ADJ  F2=NOUN RATIO=20     bash rules.sh | go run ./cmd/mkrules -tag1 ADJ   -tag2 NOUN  -var adjNounRules   > tok/rules_adjnoun_gen.go
-	F1=ADP  F2=PART              bash rules.sh | go run ./cmd/mkrules -tag1 ADP   -tag2 PART  -var adpPartRules   > tok/rules_adppart_gen.go
-	F1=AUX  F2=VERB              bash rules.sh | go run ./cmd/mkrules -tag1 AUX   -tag2 VERB  -var auxVerbRules   > tok/rules_auxverb_gen.go
-	F1=DET  F2=PRON              bash rules.sh | go run ./cmd/mkrules -tag1 DET   -tag2 PRON  -var detPronRules   > tok/rules_detpron_gen.go
-	F1=ADP  F2=SCONJ             bash rules.sh | go run ./cmd/mkrules -tag1 ADP   -tag2 SCONJ -var adpSconjRules  > tok/rules_adpsconj_gen.go
-	F1=ADJ  F2=VERB              bash rules.sh | go run ./cmd/mkrules -tag1 ADJ   -tag2 VERB  -var adjVerbRules   > tok/rules_adjverb_gen.go
-	F1=ADJ  F2=ADV               bash rules.sh | go run ./cmd/mkrules -tag1 ADJ   -tag2 ADV   -var adjAdvRules    > tok/rules_adjadv_gen.go
-	F1=ADV  F2=DET               bash rules.sh | go run ./cmd/mkrules -tag1 ADV   -tag2 DET   -var advDetRules    > tok/rules_advdet_gen.go
-	F1=ADP  F2=ADV               bash rules.sh | go run ./cmd/mkrules -tag1 ADP   -tag2 ADV   -var adpAdvRules    > tok/rules_adpadv_gen.go
-	F1=ADV  F2=NUM               bash rules.sh | go run ./cmd/mkrules -tag1 ADV   -tag2 NUM   -var advNumRules    > tok/rules_advnum_gen.go
+tok/rules_gen.go: rules.db rules.sh cmd/mkrules/main.go ## regenerate context disambiguation rules from corpus statistics
+	{ \
+	F1=NOUN F2=VERB          bash rules.sh | go run ./cmd/mkrules -tag1 NOUN -tag2 VERB  -var nounVerbRules; \
+	F1=ADJ  F2=NOUN RATIO=20 bash rules.sh | go run ./cmd/mkrules -tag1 ADJ  -tag2 NOUN  -var adjNounRules  -noheader; \
+	F1=ADP  F2=PART          bash rules.sh | go run ./cmd/mkrules -tag1 ADP  -tag2 PART  -var adpPartRules  -noheader; \
+	F1=AUX  F2=VERB          bash rules.sh | go run ./cmd/mkrules -tag1 AUX  -tag2 VERB  -var auxVerbRules  -noheader; \
+	F1=DET  F2=PRON          bash rules.sh | go run ./cmd/mkrules -tag1 DET  -tag2 PRON  -var detPronRules  -noheader; \
+	F1=ADP  F2=SCONJ         bash rules.sh | go run ./cmd/mkrules -tag1 ADP  -tag2 SCONJ -var adpSconjRules -noheader; \
+	F1=ADJ  F2=VERB          bash rules.sh | go run ./cmd/mkrules -tag1 ADJ  -tag2 VERB  -var adjVerbRules  -noheader; \
+	F1=ADJ  F2=ADV           bash rules.sh | go run ./cmd/mkrules -tag1 ADJ  -tag2 ADV   -var adjAdvRules   -noheader; \
+	F1=ADV  F2=DET           bash rules.sh | go run ./cmd/mkrules -tag1 ADV  -tag2 DET   -var advDetRules   -noheader; \
+	F1=ADP  F2=ADV           bash rules.sh | go run ./cmd/mkrules -tag1 ADP  -tag2 ADV   -var adpAdvRules   -noheader; \
+	F1=ADV  F2=NUM           bash rules.sh | go run ./cmd/mkrules -tag1 ADV  -tag2 NUM   -var advNumRules   -noheader; \
+	} > tok/rules_gen.go
 
 tok/lexicon_gen.go: data/brown-penn-nltk.json cmd/brown-remap/main.go closed.go words.go ## generate compiled-in lexicon for tok package
 	go run ./cmd/brown-remap/ -go < data/brown-penn-nltk.json > tok/lexicon_gen.go 2>/dev/null
