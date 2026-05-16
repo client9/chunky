@@ -1,8 +1,6 @@
 package tok
 
 import (
-	"sort"
-
 	"github.com/client9/chunky"
 )
 
@@ -24,16 +22,6 @@ type ContextRule struct {
 	Next, Next2     chunky.Tag
 	Mask            uint8
 	Resolve         chunky.Tag
-}
-
-func (r ContextRule) specificity() int {
-	n := 0
-	for _, b := range []uint8{maskPrev2, maskPrev, maskNext, maskNext2} {
-		if r.Mask&b != 0 {
-			n++
-		}
-	}
-	return n
 }
 
 func matchSlot(want chunky.Tag, tok Token, active bool) bool {
@@ -123,38 +111,16 @@ func disambiguateWith(tokens []Token, rules []ContextRule) []Token {
 	return tokens
 }
 
-// contextRules is the combined, specificity-sorted rule table built from all
-// generated per-pair rule sets. Rules from different pairs don't compete for
-// 2-way ambiguous tokens (Tag1/Tag2 are checked first), but 3-way ambiguous
-// tokens (e.g. ADJ/NOUN/VERB) can match rules from multiple pairs, so the
-// global sort ensures the most-specific rule always fires first.
-var contextRules []ContextRule
-
-func init() {
-	contextRules = make([]ContextRule, 0,
-		len(nounVerbRules)+len(adjNounRules)+len(adpPartRules)+len(auxVerbRules)+
-			len(detPronRules)+len(adpSconjRules)+len(adjVerbRules)+len(adjAdvRules)+
-			len(advDetRules)+len(adpAdvRules)+len(advNumRules)+
-			len(detPronBroadRules)+len(advDetBroadRules)+len(adpSconjBroadRules)+len(nounVerbBroadRules))
-	contextRules = append(contextRules, nounVerbRules...)
-	contextRules = append(contextRules, adjNounRules...)
-	contextRules = append(contextRules, adpPartRules...)
-	contextRules = append(contextRules, auxVerbRules...)
-	contextRules = append(contextRules, detPronRules...)
-	contextRules = append(contextRules, adpSconjRules...)
-	contextRules = append(contextRules, adjVerbRules...)
-	contextRules = append(contextRules, adjAdvRules...)
-	contextRules = append(contextRules, advDetRules...)
-	contextRules = append(contextRules, adpAdvRules...)
-	contextRules = append(contextRules, advNumRules...)
-	contextRules = append(contextRules, detPronBroadRules...)
-	contextRules = append(contextRules, advDetBroadRules...)
-	contextRules = append(contextRules, adpSconjBroadRules...)
-	contextRules = append(contextRules, nounVerbBroadRules...)
-	sort.SliceStable(contextRules, func(i, j int) bool {
-		return contextRules[i].specificity() > contextRules[j].specificity()
-	})
-}
+// contextRules is the combined rule table: globally-sorted generated rules
+// (all pairs, most-specific-first) followed by 1-slot broad fallbacks.
+var contextRules = append(
+	append(append(append(append(
+		generatedRules,
+		detPronBroadRules...),
+		advDetBroadRules...),
+		adpSconjBroadRules...),
+		nounVerbBroadRules...),
+)
 
 // DisambiguateContext resolves ambiguous tokens using the compiled context rule
 // table. It runs to fixed point so that tokens resolved in one pass can unblock
