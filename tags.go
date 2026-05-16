@@ -5,10 +5,10 @@ import (
 	"strings"
 )
 
-type Tag int
+type Tag uint32
 
 const (
-	TagUNK = iota
+	TagUNK = 1 << iota
 	TagADJ
 	TagADP
 	TagADV
