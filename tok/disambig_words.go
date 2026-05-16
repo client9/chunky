@@ -12,5 +12,6 @@ func DisambiguateWords(tokens []Token) []Token {
 	tokens = DisambiguateThat(tokens)
 	tokens = DisambiguateThen(tokens)
 	tokens = DisambiguateWill(tokens)
+	tokens = DisambiguateLike(tokens)
 	return tokens
 }
