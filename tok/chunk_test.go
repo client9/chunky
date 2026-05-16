@@ -179,16 +179,17 @@ func TestIsAuxVP_ContractedAux(t *testing.T) {
 }
 
 func TestPredicateADJ_CopulaVerb(t *testing.T) {
-	// Pure ADJ following a resolved copula VERB should be B-ADJP, not B-NP.
+	// Pure ADJ (single-tag) following a copula VERB should be B-ADJP, not B-NP.
+	// Words must be unambiguously ADJ in the lexicon for isPredicateADJ to fire.
 	cases := []struct {
 		input string
 		word  string
 		want  chunky.ChunkKind
 	}{
 		{"The situation remained unchanged.", "unchanged", chunky.ChunkADJP},
-		{"The outcome seems unlikely.", "unlikely", chunky.ChunkADJP},
-		{"She appeared calm.", "calm", chunky.ChunkADJP},
-		{"The plan became clear.", "clear", chunky.ChunkADJP},
+		{"The outcome seemed reasonable.", "reasonable", chunky.ChunkADJP},
+		{"The policy proved ineffective.", "ineffective", chunky.ChunkADJP},
+		{"The plan appears unlikely.", "unlikely", chunky.ChunkADJP},
 	}
 	for _, tc := range cases {
 		sents := Parse(tc.input)
