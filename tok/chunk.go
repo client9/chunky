@@ -27,7 +27,7 @@ func Chunk(tokens []Token) []Token {
 				i++
 			}
 		case chunky.TagAUX, chunky.TagVERB:
-			if tokens[i].Word == "'s" {
+			if tokens[i].Word == "'s" && !isAuxVP(tokens, i) {
 				i++
 			} else {
 				i = markVP(tokens, i)
@@ -37,7 +37,7 @@ func Chunk(tokens []Token) []Token {
 			switch {
 			case tokens[i].HasTag(chunky.TagAUX):
 				// AUX|NOUN (will, may) → start VP
-				if tokens[i].Word == "'s" {
+				if tokens[i].Word == "'s" && !isAuxVP(tokens, i) {
 					i++
 				} else {
 					i = markVP(tokens, i)
@@ -63,6 +63,13 @@ func Chunk(tokens []Token) []Token {
 	return tokens
 }
 
+// isAuxVP reports whether "'s" at position i should start a VP — i.e., it is
+// the contracted "is/has" auxiliary followed by a verbal or adjectival complement.
+func isAuxVP(tokens []Token, i int) bool {
+	next := tokenAt(tokens, i+1)
+	return next.HasTag(chunky.TagVERB) || next.HasTag(chunky.TagADJ) || next.HasTag(chunky.TagADV)
+}
+
 // isInfinitival reports whether the token at i is "to" (ADP or PART) used as
 // an infinitive marker — i.e., followed by a VERB.
 func isInfinitival(tokens []Token, i int) bool {
@@ -82,9 +89,13 @@ func markNP(tokens []Token, start int) int {
 		i++
 	}
 	// Suppress NPs that consist only of a bare DET — "the", "a", "an" alone
-	// are never chunk heads in CoNLL-2000 style.
+	// are never chunk heads in CoNLL-2000 style. Exception: partitive quantifiers
+	// ("most of", "more of", "much of") head NPs with a following PP complement.
 	if i == start+1 && tokens[start].Tags == chunky.TagDET {
-		return i
+		next := tokenAt(tokens, i)
+		if next.Word != "of" {
+			return i
+		}
 	}
 	tokens[start].Chunk = chunky.ChunkTag{IOB: 'B', Kind: chunky.ChunkNP}
 	for j := start + 1; j < i; j++ {

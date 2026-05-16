@@ -161,8 +161,10 @@ func TagFromBrownTag(s string) Tag {
 		return TagPART
 	case "EX":
 		return TagPART
-	case "FW", "UH":
+	case "FW":
 		return TagX
+	case "UH":
+		return TagINTJ
 	case "(", ")", ".", ":", ",", "'", "--":
 		return TagPUNCT
 	case "*":

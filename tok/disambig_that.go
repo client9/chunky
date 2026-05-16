@@ -2,10 +2,13 @@ package tok
 
 // DisambiguateThat resolves the PRON/SCONJ/DET ambiguity on "that" and "That".
 //
-// Only the most reliable case is handled: "that" directly before a DET
-// article is the complementizer SCONJ ("He said that the car...").
-// Other uses (DET "that car", PRON "after that") require wider context
-// and are left for downstream rules.
+// Resolved as SCONJ (complementizer):
+//   - prev=VERB   → "said that", "argued that", "knowing that"
+//   - prev=ADJ    → "confident that", "sure that", "aware that"
+//   - next=DET    → "that the/a/an ..." (existing rule)
+//
+// DET ("that car") and PRON ("after that") require wider context and are
+// left for downstream rules.
 func DisambiguateThat(tokens []Token) []Token {
 	for i, t := range tokens {
 		if t.Word != "that" && t.Word != "That" {
@@ -14,8 +17,21 @@ func DisambiguateThat(tokens []Token) []Token {
 		if !t.HasTag(TagPRON) || !t.HasTag(TagSCONJ) || !t.HasTag(TagDET) {
 			continue
 		}
-		if resolvedAs(tokenAt(tokens, i+1), TagDET) {
-			tokens[i].Tags = TagSCONJ
+		prev := tokenAt(tokens, i-1)
+		next := tokenAt(tokens, i+1)
+		var resolve Tag
+		switch {
+		case prev.HasTag(TagVERB) && next.HasTag(TagDET|TagPRON|TagNOUN|TagPROPN|TagADV|TagAUX):
+			// "said that he/the/it/there..." — complementizer, not object pronoun
+			resolve = TagSCONJ
+		case resolvedAs(prev, TagADJ) && next.HasTag(TagDET|TagPRON|TagNOUN|TagPROPN|TagADV|TagAUX):
+			// "confident that it/the..." — complementizer
+			resolve = TagSCONJ
+		case resolvedAs(next, TagDET):
+			resolve = TagSCONJ
+		}
+		if resolve != 0 {
+			tokens[i].Tags = resolve
 			tokens[i].Rule = t.Rule + "+that"
 		}
 	}

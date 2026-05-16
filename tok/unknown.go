@@ -187,7 +187,7 @@ func NumericCandidates(word string) (chunky.Tag, string) {
 		return chunky.TagADJ, "morph:ordinal"
 	}
 	if isDecade(lower) {
-		return chunky.TagNOUN | chunky.TagNUM, "morph:decade"
+		return chunky.TagNOUN, "morph:decade"
 	}
 	if isNumber(lower) {
 		return chunky.TagNUM, "morph:num"
@@ -302,20 +302,20 @@ func MorphCandidates(word string, isFirst bool) (chunky.Tag, string) {
 
 	prefix := ""
 	switch {
-	case strings.HasPrefix(lower, "re"),
-		strings.HasPrefix(lower, "over"),
-		strings.HasPrefix(lower, "under"):
+	case suffix != "-ly" && (strings.HasPrefix(lower, "re") ||
+		strings.HasPrefix(lower, "over") ||
+		strings.HasPrefix(lower, "under")):
 		add(chunky.TagVERB)
 		prefix = "re-/over-/under-"
-	case strings.HasPrefix(lower, "un"),
-		strings.HasPrefix(lower, "non"),
-		strings.HasPrefix(lower, "anti"),
-		strings.HasPrefix(lower, "pre"),
-		strings.HasPrefix(lower, "post"),
-		strings.HasPrefix(lower, "inter"),
-		strings.HasPrefix(lower, "intra"),
-		strings.HasPrefix(lower, "trans"),
-		strings.HasPrefix(lower, "extra"):
+	case suffix != "-ly" && (strings.HasPrefix(lower, "un") ||
+		strings.HasPrefix(lower, "non") ||
+		strings.HasPrefix(lower, "anti") ||
+		strings.HasPrefix(lower, "pre") ||
+		strings.HasPrefix(lower, "post") ||
+		strings.HasPrefix(lower, "inter") ||
+		strings.HasPrefix(lower, "intra") ||
+		strings.HasPrefix(lower, "trans") ||
+		strings.HasPrefix(lower, "extra")):
 		add(chunky.TagADJ, chunky.TagNOUN)
 		prefix = "un-/non-/anti-/pre-/..."
 	}

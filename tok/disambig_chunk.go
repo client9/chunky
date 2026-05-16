@@ -39,6 +39,9 @@ func DisambiguateByChunk(tokens []Token) []Token {
 			if kind == chunky.ChunkVP {
 				tokens[i].Tags = chunky.TagPART
 				tokens[i].Rule = tok.Rule + "+chunk"
+			} else if kind == chunky.ChunkPP {
+				tokens[i].Tags = chunky.TagADP
+				tokens[i].Rule = tok.Rule + "+chunk"
 			}
 		case tok.HasTag(chunky.TagAUX) && tok.HasTag(chunky.TagNOUN):
 			if kind == chunky.ChunkVP {
