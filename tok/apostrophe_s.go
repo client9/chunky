@@ -1,10 +1,6 @@
 package tok
 
-import (
-	"strings"
-
-	"github.com/client9/chunky"
-)
+import "strings"
 
 // auxHosts is the closed set of words whose "'s" contraction is a copula/auxiliary,
 // not a possessive. All others (nouns, proper nouns, indefinite pronouns) are PART.
@@ -31,23 +27,22 @@ func DisambiguateApostropheS(tokens []Token) []Token {
 		if t.Word != "'s" {
 			continue
 		}
-		tag := chunky.Tag(chunky.TagPART)
+		tag := TagPART
 		if i > 0 && auxHosts[strings.ToLower(tokens[i-1].Word)] {
-			tag = chunky.TagAUX
+			tag = TagAUX
 		}
 		tokens[i].Tags = tag
 		tokens[i].Rule = "apostrophe-s"
 
-		if tag == chunky.TagPART {
-			// Possessor: the token before a possessive "'s" is always a noun.
-			if i > 0 && tokens[i-1].HasTag(chunky.TagNOUN) && tokens[i-1].HasTag(chunky.TagVERB) {
-				tokens[i-1].Tags = chunky.TagNOUN
-				tokens[i-1].Rule = tokens[i-1].Rule + "+poss-host"
+		if tag == TagPART {
+			prev, next := tokenAt(tokens, i-1), tokenAt(tokens, i+1)
+			if prev.HasTag(TagNOUN) && prev.HasTag(TagVERB) {
+				tokens[i-1].Tags = TagNOUN
+				tokens[i-1].Rule = prev.Rule + "+poss-host"
 			}
-			// Possessed head: the token after a possessive "'s" is always a noun.
-			if i+1 < len(tokens) && tokens[i+1].HasTag(chunky.TagNOUN) && tokens[i+1].HasTag(chunky.TagVERB) {
-				tokens[i+1].Tags = chunky.TagNOUN
-				tokens[i+1].Rule = tokens[i+1].Rule + "+poss-head"
+			if next.HasTag(TagNOUN) && next.HasTag(TagVERB) {
+				tokens[i+1].Tags = TagNOUN
+				tokens[i+1].Rule = next.Rule + "+poss-head"
 			}
 		}
 	}
