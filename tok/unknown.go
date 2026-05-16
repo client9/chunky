@@ -195,6 +195,9 @@ func NumericCandidates(word string) (chunky.Tag, string) {
 	if strings.HasSuffix(lower, "%") && isNumber(lower[:len(lower)-1]) {
 		return chunky.TagNUM, "morph:percent"
 	}
+	if isFraction(lower) {
+		return chunky.TagNUM, "morph:fraction"
+	}
 	return 0, ""
 }
 
@@ -380,6 +383,23 @@ func isNumber(s string) bool {
 		}
 	}
 	return hasDigit
+}
+
+// isFraction reports whether s is a fraction of the form NUM/NUM (e.g. "3/8", "1/2").
+// Also handles the Penn Treebank escaped form "3\/8" where the slash is preceded
+// by a literal backslash.
+func isFraction(s string) bool {
+	sep := "/"
+	i := strings.Index(s, "\\/")
+	if i > 0 {
+		sep = "\\/"
+	} else {
+		i = strings.Index(s, "/")
+	}
+	if i <= 0 || i+len(sep) >= len(s) {
+		return false
+	}
+	return isNumber(s[:i]) && isNumber(s[i+len(sep):])
 }
 
 func isAlpha(s string) bool {

@@ -35,12 +35,32 @@ func DisambiguateByChunk(tokens []Token) []Token {
 				tokens[i].Tags = chunky.TagADJ
 				tokens[i].Rule = tok.Rule + "+chunk"
 			}
+		case tok.HasTag(chunky.TagADJ) && tok.HasTag(chunky.TagNOUN):
+			if kind == chunky.ChunkNP {
+				next := tokenAt(tokens, i+1)
+				if next.Chunk.IOB == 'I' && next.Chunk.Kind == chunky.ChunkNP {
+					// Prenominal modifier: a following I-NP token continues the NP → ADJ.
+					tokens[i].Tags = chunky.TagADJ
+					tokens[i].Rule = tok.Rule + "+chunk"
+				} else if tok.Chunk.IOB == 'I' {
+					// NP head: this token is I-NP and nothing follows in the NP → NOUN.
+					tokens[i].Tags = chunky.TagNOUN
+					tokens[i].Rule = tok.Rule + "+chunk"
+				}
+				// B-NP alone (no prior NP content): leave ambiguous — may be a
+				// predicate adjective ("ain't right") rather than a substantive noun.
+			}
 		case tok.HasTag(chunky.TagADP) && tok.HasTag(chunky.TagPART):
 			if kind == chunky.ChunkVP {
 				tokens[i].Tags = chunky.TagPART
 				tokens[i].Rule = tok.Rule + "+chunk"
 			} else if kind == chunky.ChunkPP {
 				tokens[i].Tags = chunky.TagADP
+				tokens[i].Rule = tok.Rule + "+chunk"
+			}
+		case tok.HasTag(chunky.TagAUX) && tok.HasTag(chunky.TagVERB):
+			if kind == chunky.ChunkVP {
+				tokens[i].Tags = chunky.TagAUX
 				tokens[i].Rule = tok.Rule + "+chunk"
 			}
 		case tok.HasTag(chunky.TagAUX) && tok.HasTag(chunky.TagNOUN):

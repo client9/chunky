@@ -26,6 +26,11 @@ func TestDisambiguateVerbForms(t *testing.T) {
 		{"She remains the director.", "remains", chunky.TagVERB},
 		{"He leads the team.", "leads", chunky.TagVERB},
 		{"It takes time.", "takes", chunky.TagVERB},
+
+		// VERB: quotative inversion — PUNCT before, nominal after
+		{"'', says Bonita Austin", "says", chunky.TagVERB},
+		{"fine , says he", "says", chunky.TagVERB},
+		{"agreed , says the spokesman", "says", chunky.TagVERB},
 	}
 	for _, tc := range cases {
 		sents := Parse(tc.input)

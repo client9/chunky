@@ -127,12 +127,13 @@ func disambiguateWith(tokens []Token, rules []ContextRule) []Token {
 // contextRules is the combined rule table: globally-sorted generated rules
 // (all pairs, most-specific-first) followed by 1-slot broad fallbacks.
 var contextRules = append(
-	append(append(append(append(
+	append(append(append(append(append(
 		generatedRules,
 		detPronBroadRules...),
 		advDetBroadRules...),
 		adpSconjBroadRules...),
 		nounVerbBroadRules...),
+		adjNounBroadRules...),
 )
 
 // DisambiguateContext resolves ambiguous tokens using the compiled context rule

@@ -41,5 +41,6 @@ func DisambiguateWords(tokens []Token) []Token {
 	tokens = DisambiguateSave(tokens)
 	tokens = DisambiguateTo(tokens)
 	tokens = DisambiguateAdjVerb(tokens)
+	tokens = DisambiguateSCONJasADP(tokens)
 	return tokens
 }

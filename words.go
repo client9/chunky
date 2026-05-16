@@ -21,9 +21,11 @@ var WordTags = map[string]Tag{
 	"$":  TagSYM,   // as per spaCy
 	"%":  TagNOUN,  // as per spaCy
 	"_":  TagPUNCT,
-	"\"": TagPUNCT,
-	"–":  TagPUNCT, // en dash
-	"—":  TagPUNCT, // em dash
+	"\"":  TagPUNCT,
+	"''":  TagPUNCT, // closing double quote (Penn Treebank convention)
+	"``":  TagPUNCT, // opening double quote (Penn Treebank convention)
+	"–":   TagPUNCT, // en dash
+	"—":   TagPUNCT, // em dash
 
 	// Brown corpus assigns DET to these but spaCy/UD always tags them ADJ.
 	// They are gradable prenominal modifiers, never true determiners.
@@ -54,6 +56,21 @@ var WordTags = map[string]Tag{
 	"false":       TagADJ,
 	"large":       TagADJ,
 	"full":        TagADJ,
+
+	// Brown ADJ|NOUN but spaCy ≥93% ADJ; these words are essentially never
+	// used as standalone noun heads in prose — force to ADJ.
+	// Note: "main" omitted — "Main Street" (proper name) relies on the NOUN
+	// candidate before RetagCapitalized runs to correctly disambiguate "down Main St."
+	"small":        TagADJ,
+	"common":       TagADJ,
+	"local":        TagADJ,
+	"original":     TagADJ,
+	"annual":       TagADJ,
+	"commercial":   TagADJ,
+	"active":       TagADJ,
+	"private":      TagADJ,
+	"professional": TagADJ,
+	"musical":      TagADJ,
 
 	// Brown tagged UH (interjection) alongside VB; overwhelmingly VERB in prose.
 	// "et" is a genuine Latin foreign word → TagX.
@@ -145,6 +162,20 @@ var WordTags = map[string]Tag{
 	"including": TagADP,
 	"involving": TagADP,
 	"regarding": TagADP,
+
+	// gerund-nouns: Brown corpus tagged only as VERB but these are frequently
+	// used as noun heads or noun modifiers ("trading volume", "operating profit",
+	// "banking sector"). Adding NOUN candidate lets DisambiguateByChunk resolve
+	// via chunk position rather than always forcing VP.
+	"trading":    TagNOUN | TagVERB,
+	"operating":  TagNOUN | TagVERB,
+	"banking":    TagNOUN | TagVERB,
+	"filing":     TagNOUN | TagVERB,
+	"funding":    TagNOUN | TagVERB,
+	"developing": TagNOUN | TagVERB,
+	"smoking":    TagNOUN | TagVERB,
+	"warming":    TagNOUN | TagVERB,
+	"fuels":      TagNOUN | TagVERB,
 
 	// -ede verbs: too few to justify a suffix rule, all clearly VERB
 	"accede":    TagVERB,

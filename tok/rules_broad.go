@@ -31,6 +31,14 @@ var nounVerbBroadRules = []ContextRule{
 	{Tags: TagNOUN | TagVERB, Next: TagPRON | TagADJ | TagADV, Mask: maskNext, Resolve: TagVERB},
 }
 
+// adjNounBroadRules resolves ADJ/NOUN ambiguity using the immediately following
+// tag. When an ADJ|NOUN token precedes a resolved NOUN or PROPN it is acting
+// as a prenominal modifier → ADJ ("national team", "military force").
+// Corpus precision for next=NOUN/PROPN is >99%.
+var adjNounBroadRules = []ContextRule{
+	{Tags: TagADJ | TagNOUN, Next: TagNOUN | TagPROPN, Mask: maskNext, Resolve: TagADJ},
+}
+
 // adpSconjBroadRules resolves ADP/SCONJ ambiguity (after/before/until) using
 // the immediately following tag. Only resolves to ADP — SCONJ has no clean
 // single-token signal and is left for the generated 4-slot rules.

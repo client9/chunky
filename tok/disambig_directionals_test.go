@@ -32,8 +32,8 @@ func TestDisambiguateDirectionals(t *testing.T) {
 
 		// prenominal ADJ: next=NOUN blocks our DET→NOUN rule; context rules resolve to ADJ
 		{"The south side of town was quiet.", "south", chunky.TagADJ},
-		// prenominal ADJ: DET+NOUN context — our rule doesn't fire, remains ambiguous
-		{"A north wind blew in.", "north", chunky.Tag(0)},
+		// prenominal ADJ: resolves to ADJ via adjNounBroadRule (before NOUN) or chunk context
+		{"A north wind blew in.", "north", chunky.TagADJ},
 	}
 	for _, tc := range cases {
 		sents := Parse(tc.input)
