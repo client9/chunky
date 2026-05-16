@@ -24,6 +24,19 @@ type ContextRule struct {
 	Resolve         chunky.Tag
 }
 
+// tokenAt returns the token at index i, or a zero Token if i is out of bounds.
+func tokenAt(tokens []Token, i int) Token {
+	if i < 0 || i >= len(tokens) {
+		return Token{}
+	}
+	return tokens[i]
+}
+
+// resolvedAs reports whether tok is fully resolved to exactly tag.
+func resolvedAs(tok Token, tag Tag) bool {
+	return tok.IsResolved() && tok.Tags == tag
+}
+
 func matchSlot(want chunky.Tag, tok Token, active bool) bool {
 	if !active {
 		return true

@@ -1,10 +1,6 @@
 package tok
 
-import (
-	"strings"
-
-	"github.com/client9/chunky"
-)
+import "strings"
 
 // DisambiguateThere resolves the PRON/ADV ambiguity on "there"/"There" tokens.
 //
@@ -15,15 +11,12 @@ func DisambiguateThere(tokens []Token) []Token {
 		if strings.ToLower(t.Word) != "there" {
 			continue
 		}
-		if !t.HasTag(chunky.TagPRON) || !t.HasTag(chunky.TagADV) {
+		if !t.HasTag(TagPRON) || !t.HasTag(TagADV) {
 			continue
 		}
-		tag := chunky.Tag(chunky.TagADV)
-		if i+1 < len(tokens) {
-			next := tokens[i+1]
-			if next.HasTag(chunky.TagAUX) || next.HasTag(chunky.TagVERB) {
-				tag = chunky.TagPRON
-			}
+		tag := TagADV
+		if tokenAt(tokens, i+1).HasTag(TagAUX | TagVERB) {
+			tag = TagPRON
 		}
 		tokens[i].Tags = tag
 		tokens[i].Rule = t.Rule + "+there"

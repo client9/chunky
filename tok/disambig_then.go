@@ -1,7 +1,5 @@
 package tok
 
-import "github.com/client9/chunky"
-
 // DisambiguateThen resolves the ADJ/ADV/SCONJ ambiguity on "then" and "Then".
 //
 // Three uses exist, but only two are detectable with local context:
@@ -16,12 +14,12 @@ func DisambiguateThen(tokens []Token) []Token {
 		if t.Word != "then" && t.Word != "Then" {
 			continue
 		}
-		if !t.HasTag(chunky.TagADJ) || !t.HasTag(chunky.TagADV) || !t.HasTag(chunky.TagSCONJ) {
+		if !t.HasTag(TagADJ) || !t.HasTag(TagADV) || !t.HasTag(TagSCONJ) {
 			continue
 		}
-		tag := chunky.Tag(chunky.TagADV)
-		if i > 0 && tokens[i-1].IsResolved() && tokens[i-1].Tags == chunky.TagDET {
-			tag = chunky.TagADJ
+		tag := TagADV
+		if resolvedAs(tokenAt(tokens, i-1), TagDET) {
+			tag = TagADJ
 		}
 		tokens[i].Tags = tag
 		tokens[i].Rule = t.Rule + "+then"

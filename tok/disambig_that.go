@@ -1,7 +1,5 @@
 package tok
 
-import "github.com/client9/chunky"
-
 // DisambiguateThat resolves the PRON/SCONJ/DET ambiguity on "that" and "That".
 //
 // Only the most reliable case is handled: "that" directly before a DET
@@ -13,17 +11,13 @@ func DisambiguateThat(tokens []Token) []Token {
 		if t.Word != "that" && t.Word != "That" {
 			continue
 		}
-		if !t.HasTag(chunky.TagPRON) || !t.HasTag(chunky.TagSCONJ) || !t.HasTag(chunky.TagDET) {
+		if !t.HasTag(TagPRON) || !t.HasTag(TagSCONJ) || !t.HasTag(TagDET) {
 			continue
 		}
-		if i+1 >= len(tokens) || tokens[i+1].IsUnknownTag() {
-			continue
+		if resolvedAs(tokenAt(tokens, i+1), TagDET) {
+			tokens[i].Tags = TagSCONJ
+			tokens[i].Rule = t.Rule + "+that"
 		}
-		if tokens[i+1].Tags != chunky.TagDET {
-			continue
-		}
-		tokens[i].Tags = chunky.TagSCONJ
-		tokens[i].Rule = t.Rule + "+that"
 	}
 	return tokens
 }

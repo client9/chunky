@@ -1,7 +1,5 @@
 package tok
 
-import "github.com/client9/chunky"
-
 // DisambiguateMay resolves the AUX/PROPN ambiguity on "may" and "May" tokens.
 //
 // Two safe cases are handled pre-sentence:
@@ -13,16 +11,16 @@ import "github.com/client9/chunky"
 // knowing sentence position.
 func DisambiguateMay(tokens []Token) []Token {
 	for i, t := range tokens {
-		if !t.HasTag(chunky.TagAUX) || !t.HasTag(chunky.TagPROPN) {
+		if !t.HasTag(TagAUX) || !t.HasTag(TagPROPN) {
 			continue
 		}
 		switch t.Word {
 		case "may":
-			tokens[i].Tags = chunky.TagAUX
+			tokens[i].Tags = TagAUX
 			tokens[i].Rule = t.Rule + "+may"
 		case "May":
-			if i+1 < len(tokens) && tokens[i+1].HasTag(chunky.TagNUM) {
-				tokens[i].Tags = chunky.TagPROPN
+			if tokenAt(tokens, i+1).HasTag(TagNUM) {
+				tokens[i].Tags = TagPROPN
 				tokens[i].Rule = t.Rule + "+may"
 			}
 		}
@@ -40,12 +38,12 @@ func RetagMay(tokens []Token) []Token {
 		return tokens
 	}
 	t := tokens[0]
-	if t.Word != "May" || !t.HasTag(chunky.TagAUX) || !t.HasTag(chunky.TagPROPN) {
+	if t.Word != "May" || !t.HasTag(TagAUX) || !t.HasTag(TagPROPN) {
 		return tokens
 	}
-	tag := chunky.Tag(chunky.TagPROPN)
-	if len(tokens) > 1 && tokens[1].HasTag(chunky.TagPRON) {
-		tag = chunky.TagAUX
+	tag := TagPROPN
+	if tokenAt(tokens, 1).HasTag(TagPRON) {
+		tag = TagAUX
 	}
 	tokens[0].Tags = tag
 	tokens[0].Rule = t.Rule + "+may"
