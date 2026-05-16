@@ -20,22 +20,22 @@ import (
 // featureSlots maps a feature template name to the ordered list of context
 // slot names that its key segments fill.
 var featureSlots = map[string][]string{
-	"nexttag":                             {"next"},
-	"prevtag":                             {"prev"},
-	"prevtag+nexttag":                     {"prev", "next"},
-	"prev2tag+prevtag":                    {"prev2", "prev"},
-	"prevtag+nexttag+next2tag":            {"prev", "next", "next2"},
-	"prev2tag+prevtag+nexttag":            {"prev2", "prev", "next"},
-	"prev2tag+prevtag+nexttag+next2tag":   {"prev2", "prev", "next", "next2"},
+	"nexttag":                           {"next"},
+	"prevtag":                           {"prev"},
+	"prevtag+nexttag":                   {"prev", "next"},
+	"prev2tag+prevtag":                  {"prev2", "prev"},
+	"prevtag+nexttag+next2tag":          {"prev", "next", "next2"},
+	"prev2tag+prevtag+nexttag":          {"prev2", "prev", "next"},
+	"prev2tag+prevtag+nexttag+next2tag": {"prev2", "prev", "next", "next2"},
 }
 
 type rule struct {
-	tag1, tag2      chunky.Tag
-	prev2, prev     chunky.Tag
-	next, next2     chunky.Tag
-	mask            uint8
-	resolve         chunky.Tag
-	specificity     int
+	tag1, tag2  chunky.Tag
+	prev2, prev chunky.Tag
+	next, next2 chunky.Tag
+	mask        uint8
+	resolve     chunky.Tag
+	specificity int
 }
 
 const (
@@ -59,11 +59,111 @@ func slotMask(slot string) uint8 {
 	return 0
 }
 
-func tagGoName(t chunky.Tag) string {
-	if t == chunky.TagUNK {
+// singleTagName returns the Go identifier for a single-bit Tag constant.
+func singleTagName(tag chunky.Tag) string {
+	if tag == chunky.TagUNK {
 		return "chunky.TagUNK"
 	}
-	return "chunky.Tag" + t.String()
+	return "chunky.Tag" + tag.String()
+}
+
+// tagGoName emits the Go expression for a Tag value, handling SuperTags (ORed bits).
+func tagGoName(t chunky.Tag) string {
+	if t == 0 {
+		return "0"
+	}
+	var parts []string
+	for _, tag := range chunky.AllTags {
+		if t&tag != 0 {
+			parts = append(parts, singleTagName(tag))
+		}
+	}
+	if len(parts) == 0 {
+		return "0"
+	}
+	return strings.Join(parts, " | ")
+}
+
+// canMerge reports whether two rules are identical except in exactly one slot.
+// Rules that differ in a slot where either value is TagUNK cannot be merged:
+// TagUNK has special boundary semantics in matchSlot that don't compose with |.
+// 1-slot rules are not merged: their corpus-frequency ordering is load-bearing.
+func canMerge(a, b rule) bool {
+	if a.tag1 != b.tag1 || a.tag2 != b.tag2 {
+		return false
+	}
+	if a.mask != b.mask || a.resolve != b.resolve {
+		return false
+	}
+	if bits(a.mask) < 2 {
+		return false
+	}
+	diff := 0
+	if a.prev2 != b.prev2 {
+		if a.prev2 == chunky.TagUNK || b.prev2 == chunky.TagUNK {
+			return false
+		}
+		diff++
+	}
+	if a.prev != b.prev {
+		if a.prev == chunky.TagUNK || b.prev == chunky.TagUNK {
+			return false
+		}
+		diff++
+	}
+	if a.next != b.next {
+		if a.next == chunky.TagUNK || b.next == chunky.TagUNK {
+			return false
+		}
+		diff++
+	}
+	if a.next2 != b.next2 {
+		if a.next2 == chunky.TagUNK || b.next2 == chunky.TagUNK {
+			return false
+		}
+		diff++
+	}
+	return diff == 1
+}
+
+// mergeRules combines b into a by ORing differing slot values.
+func mergeRules(a, b rule) rule {
+	a.prev2 |= b.prev2
+	a.prev |= b.prev
+	a.next |= b.next
+	a.next2 |= b.next2
+	return a
+}
+
+// consolidate iterates until no two rules can be merged, collapsing rules that
+// differ in exactly one slot into a single rule with a SuperTag in that slot.
+func consolidate(rules []rule) []rule {
+	for {
+		merged := make([]bool, len(rules))
+		var result []rule
+		changed := false
+		for i := 0; i < len(rules); i++ {
+			if merged[i] {
+				continue
+			}
+			for j := i + 1; j < len(rules); j++ {
+				if merged[j] {
+					continue
+				}
+				if canMerge(rules[i], rules[j]) {
+					rules[i] = mergeRules(rules[i], rules[j])
+					merged[j] = true
+					changed = true
+				}
+			}
+			result = append(result, rules[i])
+		}
+		rules = result
+		if !changed {
+			break
+		}
+	}
+	return rules
 }
 
 func main() {
@@ -143,8 +243,9 @@ func main() {
 					fmt.Fprintf(os.Stderr, "bad tag %q in key %q: %v\n", part, key, err)
 					goto skip
 				}
+			} else {
+				t = chunky.TagUNK // empty part = sentence boundary
 			}
-			// TagUNK (zero value) when part=="" signals sentence boundary.
 			switch slot {
 			case "prev2":
 				r.prev2 = t
@@ -167,6 +268,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	before := len(rules)
+	rules = consolidate(rules)
+	after := len(rules)
+
 	// Sort most-specific-first so earlier rules win on first match.
 	sort.SliceStable(rules, func(i, j int) bool {
 		return rules[i].specificity > rules[j].specificity
@@ -180,6 +285,7 @@ func main() {
 	fmt.Fprintf(w, "import \"github.com/client9/chunky\"\n\n")
 	fmt.Fprintf(w, "// %s is the compiled context disambiguation rule table for %s vs %s.\n", *varFlag, tag1, tag2)
 	fmt.Fprintf(w, "// Sorted most-specific-first (most active context slots first).\n")
+	fmt.Fprintf(w, "// %d rules consolidated from %d (%d merged).\n", after, before, before-after)
 	fmt.Fprintf(w, "// Generated by: F1=%s F2=%s bash rules.sh | go run ./cmd/mkrules -tag1 %s -tag2 %s -var %s\n", tag1, tag2, tag1, tag2, *varFlag)
 	fmt.Fprintf(w, "var %s = []ContextRule{\n", *varFlag)
 	for _, r := range rules {
