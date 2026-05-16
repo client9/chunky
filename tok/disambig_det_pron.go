@@ -52,8 +52,8 @@ func DisambiguateDetPron(tokens []Token) []Token {
 			switch {
 			case next.HasTag(TagNOUN|TagPROPN|TagADJ|TagNUM) && !next.HasTag(TagVERB|TagAUX):
 				resolve = TagDET // "this decision", "these three", "those old"
-			case resolvedAs(next, TagVERB) || resolvedAs(next, TagAUX):
-				resolve = TagPRON // "this is clear", "these are done", "those were"
+			case next.HasTag(TagVERB|TagAUX) && !next.HasTag(TagNOUN):
+				resolve = TagPRON // "this is clear", "these are done" (pure VERB/AUX, not {NOUN,VERB})
 			case next.HasTag(TagPUNCT|TagCCONJ):
 				resolve = TagPRON // "this.", "these,", "those and"
 			case resolvedAs(prev, TagADP) && !next.HasTag(TagNOUN|TagADJ|TagPROPN|TagNUM):
