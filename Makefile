@@ -7,6 +7,8 @@ help:
 
 build: ## build module and CLI
 	go build ./...
+bench:
+	go test ./tok/ -bench=BenchmarkParse -benchmem
 
 tok/rules_gen.go: rules.db rules.sh cmd/mkrules/main.go ## regenerate context disambiguation rules from corpus statistics
 	{ \
