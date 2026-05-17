@@ -10,6 +10,11 @@ build: ## build module and CLI
 bench:
 	go test ./tok/ -bench=BenchmarkParse -benchmem
 
+# aslso -errors NP/VP/etc in second command
+accuracy:
+	go run ./cmd/eval-pos data/conll2000-test.txt
+	go run ./cmd/eval-chunks data/conll2000-test.txt
+
 tok/rules_gen.go: rules.db rules.sh cmd/mkrules/main.go ## regenerate context disambiguation rules from corpus statistics
 	{ \
 	F1=NOUN  F2=VERB  MIN=4000 RATIO=10 bash rules.sh | sed 's/^/NOUN|VERB|/'; \
