@@ -1,6 +1,21 @@
 package tok
 
-import "github.com/client9/chunky"
+import (
+	"strings"
+
+	"github.com/client9/chunky"
+)
+
+// neverPropn is the set of lowercase words that should never be promoted to
+// PROPN by RetagCapitalized even when capitalized mid-sentence. These are
+// common nouns and abbreviations that appear capitalized for reasons other
+// than being proper names (legal terms like "Chapter 11", acronyms like "TV").
+var neverPropn = map[string]bool{
+	"chapter": true, "section": true, "article": true,
+	"tv": true, "cds": true, "cd": true,
+	"adrs": true, "adr": true, "dvd": true, "dvds": true,
+	"remics": true, "remic": true,
+}
 
 // closedClassOnly is the set of tags that are purely functional — words with
 // only these tags can never be proper nouns regardless of capitalization.
@@ -29,7 +44,11 @@ func RetagCapitalized(tokens []Token) []Token {
 		if t.Tags&^closedClassOnly == 0 {
 			continue
 		}
-		// Non-sentence-initial: known open-class capitalized word → PROPN.
+		// Skip words that are never proper names regardless of capitalization.
+		if neverPropn[strings.ToLower(t.Word)] {
+			continue
+		}
+		// Non-sentence-initial open-class capitalized word → PROPN.
 		if !t.IsUnknownTag() {
 			tokens[i].Tags = chunky.TagPROPN
 			tokens[i].Rule = t.Rule + "+caps"

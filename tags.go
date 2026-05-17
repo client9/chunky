@@ -147,7 +147,7 @@ func TagFromPennTag(s string) Tag {
 	case "WRB":
 		return TagADV | TagSCONJ
 	case "DT", "PDT":
-		return TagDET
+		return TagDET | TagPRON
 	case "WDT":
 		return TagDET | TagPRON
 	case "IN":

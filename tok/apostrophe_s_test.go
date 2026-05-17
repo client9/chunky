@@ -65,6 +65,41 @@ func TestDisambiguateApostropheS(t *testing.T) {
 	}
 }
 
+// TestPossessiveApostrophe checks that a bare ' after a plural noun is tagged PART.
+// Penn Treebank tokenizes "analysts'" as "analysts" + "'" (tag POS).
+// UD always tags the possessive marker as PART.
+func TestPossessiveApostrophe(t *testing.T) {
+	cases := []struct {
+		input string
+		word  string // the word before '
+	}{
+		{"analysts ' expectations were high.", "analysts"},
+		{"countries ' leaders met yesterday.", "countries"},
+		{"creditors ' approval was needed.", "creditors"},
+		{"the companies ' profits rose.", "companies"},
+	}
+	for _, tc := range cases {
+		sents := Parse(tc.input)
+		var apostrophe *Token
+		for _, s := range sents {
+			for i, tok := range s.Tokens {
+				if tok.Word == "'" && i > 0 && s.Tokens[i-1].Word == tc.word {
+					apostrophe = &s.Tokens[i]
+					break
+				}
+			}
+		}
+		if apostrophe == nil {
+			t.Errorf("Parse(%q): no \"'\" token after %q", tc.input, tc.word)
+			continue
+		}
+		if !apostrophe.IsResolved() || apostrophe.Tags != chunky.TagPART {
+			t.Errorf("Parse(%q) \"'\": got %v (resolved=%v), want PART",
+				tc.input, apostrophe.Tags, apostrophe.IsResolved())
+		}
+	}
+}
+
 // TestPossessiveNeighbors checks that NOUN/VERB-ambiguous tokens adjacent to a
 // possessive "'s" are resolved to NOUN. PART conflates possessive "'s" and
 // infinitival "to", so their corpus statistics cancel out and no corpus-derived

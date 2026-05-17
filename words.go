@@ -143,6 +143,21 @@ var WordTags = map[string]Tag{
 	"i":  TagPRON,
 	"me": TagPRON,
 
+	// Abbreviations used as common nouns — not proper names — so capitalized
+	// forms (TV, CDs, ADRs) are not promoted to PROPN by RetagCapitalized.
+	"tv":    TagNOUN,
+	"cds":   TagNOUN,
+	"cd":    TagNOUN,
+	"adrs":  TagNOUN,
+	"adr":   TagNOUN,
+	"dvd":   TagNOUN,
+	"dvds":  TagNOUN,
+	"pc":    TagNOUN,
+	"pcs":   TagNOUN,
+	"atm":   TagNOUN,
+	"remics": TagNOUN,
+	"remic":  TagNOUN,
+
 	// Brown noise on symbols and conjunctions.
 	"&":      TagCCONJ,
 	"and/or": TagCCONJ,

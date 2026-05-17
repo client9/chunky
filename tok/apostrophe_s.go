@@ -24,6 +24,16 @@ var auxHosts = map[string]bool{
 // threshold. The possessive case is a linguistic axiom, not a probabilistic rule.
 func DisambiguateApostropheS(tokens []Token) []Token {
 	for i, t := range tokens {
+		// Bare possessive apostrophe after plural nouns: "analysts' report".
+		// Penn POS tag; always PART in UD.
+		if t.Word == "'" {
+			prev := tokenAt(tokens, i-1)
+			if prev.HasTag(TagNOUN | TagPROPN) {
+				tokens[i].Tags = TagPART
+				tokens[i].Rule = "apostrophe-poss"
+			}
+			continue
+		}
 		if t.Word != "'s" {
 			continue
 		}

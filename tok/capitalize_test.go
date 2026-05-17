@@ -24,6 +24,13 @@ func TestRetagCapitalized(t *testing.T) {
 		{"She said `` By contrast.", "By", chunky.TagADP},
 		{"She said `` For example.", "For", chunky.TagADP},
 		{"She said `` With that.", "With", chunky.TagADP},
+
+		// neverPropn words: common nouns and abbreviations that stay NOUN even
+		// when capitalized mid-sentence (legal terms, acronyms).
+		{"filed for Chapter 11 protection.", "Chapter", chunky.TagNOUN},
+		{"see Section 3 for details.", "Section", chunky.TagNOUN},
+		{"he watches TV every night.", "TV", chunky.TagNOUN},
+		{"she bought some CDs yesterday.", "CDs", chunky.TagNOUN},
 	}
 	for _, tc := range cases {
 		sents := Parse(tc.input)
