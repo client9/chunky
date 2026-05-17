@@ -126,3 +126,22 @@ Save as `scripts/disambig-analyze.sh`, `chmod +x`, then:
 bash scripts/disambig-analyze.sh up
 bash scripts/disambig-analyze.sh long
 ```
+
+---
+
+## CoNLL-2000 accuracy baseline
+
+Run after any significant disambiguation work to check for regressions or gains:
+
+```bash
+go run ./cmd/eval-pos data/conll2000-test.txt
+```
+
+Current results (47377 tokens, 2012 sentences):
+
+| Subset | Accuracy |
+|--------|----------|
+| Overall | 95.5% |
+| In-lexicon | 97.1% |
+| OOV | 92.8% |
+| Ambiguous Penn (IN/TO/WDT/VB*/JJ) | 94.5% |
