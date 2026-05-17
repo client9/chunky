@@ -10,17 +10,17 @@ build: ## build module and CLI
 
 tok/rules_gen.go: rules.db rules.sh cmd/mkrules/main.go ## regenerate context disambiguation rules from corpus statistics
 	{ \
-	F1=NOUN F2=VERB          bash rules.sh | sed 's/^/NOUN|VERB|/'; \
-	F1=ADJ  F2=NOUN RATIO=20 bash rules.sh | sed 's/^/ADJ|NOUN|/'; \
-	F1=ADP  F2=PART          bash rules.sh | sed 's/^/ADP|PART|/'; \
-	F1=AUX  F2=VERB          bash rules.sh | sed 's/^/AUX|VERB|/'; \
-	F1=DET  F2=PRON          bash rules.sh | sed 's/^/DET|PRON|/'; \
-	F1=ADP  F2=SCONJ         bash rules.sh | sed 's/^/ADP|SCONJ|/'; \
-	F1=ADJ  F2=VERB          bash rules.sh | sed 's/^/ADJ|VERB|/'; \
-	F1=ADJ  F2=ADV           bash rules.sh | sed 's/^/ADJ|ADV|/'; \
-	F1=ADV  F2=DET           bash rules.sh | sed 's/^/ADV|DET|/'; \
-	F1=ADP  F2=ADV           bash rules.sh | sed 's/^/ADP|ADV|/'; \
-	F1=ADV  F2=NUM           bash rules.sh | sed 's/^/ADV|NUM|/'; \
+	F1=NOUN  F2=VERB  MIN=4000 RATIO=10 bash rules.sh | sed 's/^/NOUN|VERB|/'; \
+	F1=ADJ   F2=NOUN  MIN=4000 RATIO=20 bash rules.sh | sed 's/^/ADJ|NOUN|/'; \
+	F1=ADP   F2=PART  MIN=4000 RATIO=10 bash rules.sh | sed 's/^/ADP|PART|/'; \
+	F1=AUX   F2=VERB  MIN=4000 RATIO=10 bash rules.sh | sed 's/^/AUX|VERB|/'; \
+	F1=DET   F2=PRON  MIN=4000 RATIO=10 bash rules.sh | sed 's/^/DET|PRON|/'; \
+	F1=ADP   F2=SCONJ MIN=4000 RATIO=10 bash rules.sh | sed 's/^/ADP|SCONJ|/'; \
+	F1=ADJ   F2=VERB  MIN=4000 RATIO=10 bash rules.sh | sed 's/^/ADJ|VERB|/'; \
+	F1=ADJ   F2=ADV   MIN=4000 RATIO=10 bash rules.sh | sed 's/^/ADJ|ADV|/'; \
+	F1=ADV   F2=DET   MIN=4000 RATIO=10 bash rules.sh | sed 's/^/ADV|DET|/'; \
+	F1=ADP   F2=ADV   MIN=4000 RATIO=10 bash rules.sh | sed 's/^/ADP|ADV|/'; \
+	F1=ADV   F2=NUM   MIN=4000 RATIO=10 bash rules.sh | sed 's/^/ADV|NUM|/'; \
 	} | go run ./cmd/mkrules -allpairs > tok/rules_gen.go
 
 tok/lexicon_gen.go: data/brown-penn-nltk.json cmd/brown-remap/main.go closed.go words.go ## generate compiled-in lexicon for tok package

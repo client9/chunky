@@ -1,6 +1,7 @@
 #!sh
 
-FILES=data/enwiki-20260401-multistream1.pos.jsonl
+#FILES=data/enwiki-20260401-multistream1.pos.jsonl
+FILES=data/*.pos.jsonl
 
 go run ./cmd/lexrules -feat prevtag -fmt matrix $FILES | \
 	sqlite3 rules.db ".import --csv /dev/stdin features"
