@@ -243,8 +243,19 @@ func isVPCont(tokens []Token, i int) bool {
 	if tok.Tags == chunky.TagAUX || tok.Tags == chunky.TagVERB {
 		return true
 	}
-	// Ambiguous NOUN/VERB or ADJ/VERB — treat as verbal inside VP.
+	// Ambiguous NOUN/VERB or ADJ/VERB — stop VP when:
+	//   (a) prev is a resolved non-auxiliary VERB: "made plans" → NP object
+	//   (b) prev is itself an unresolved {NOUN,VERB}: "had operating profit" →
+	//       consecutive ambiguous tokens are a compound NP, not VP extension.
+	// In all other cases continue: "is planning", "to plan", "will not plan".
 	if tok.HasTag(chunky.TagVERB) && (tok.HasTag(chunky.TagNOUN) || tok.HasTag(chunky.TagADJ)) {
+		prev := tokenAt(tokens, i-1)
+		if resolvedAs(prev, chunky.TagVERB) {
+			return false
+		}
+		if prev.HasTag(chunky.TagVERB) && prev.HasTag(chunky.TagNOUN) {
+			return false
+		}
 		return true
 	}
 	if tok.Tags == chunky.TagADV {

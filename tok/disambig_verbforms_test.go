@@ -31,6 +31,12 @@ func TestDisambiguateVerbForms(t *testing.T) {
 		{"'', says Bonita Austin", "says", chunky.TagVERB},
 		{"fine , says he", "says", chunky.TagVERB},
 		{"agreed , says the spokesman", "says", chunky.TagVERB},
+
+		// NOUN: possessive pronoun introduces NP, not VP subject
+		{"his plans to expand", "plans", chunky.TagNOUN},
+		{"her calls go unanswered", "calls", chunky.TagNOUN},
+		{"their needs were met", "needs", chunky.TagNOUN},
+		{"our plans were cancelled", "plans", chunky.TagNOUN},
 	}
 	for _, tc := range cases {
 		sents := Parse(tc.input)

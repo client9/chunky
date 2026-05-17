@@ -43,6 +43,55 @@ func disambiguateChief(tokens []Token, i int) {
 	}
 }
 
+// disambiguateAdjNounStrong resolves {ADJ,NOUN} for words that are
+// overwhelmingly ADJ across all contexts — predicative, post-adverb, and
+// sentence-final as well as pre-nominal. Use only when NOUN usage is < 3%.
+// Registered for: stable, solid, safe, negative.
+func disambiguateAdjNounStrong(tokens []Token, i int) {
+	t := tokens[i]
+	if !t.HasTag(TagADJ) || !t.HasTag(TagNOUN) {
+		return
+	}
+	prev := tokenAt(tokens, i-1)
+	next := tokenAt(tokens, i+1)
+	var resolve Tag
+	switch {
+	case next.HasTag(TagNOUN | TagADJ | TagPROPN):
+		resolve = TagADJ // pre-nominal: "stable government", "solid evidence"
+	case prev.HasTag(TagADV | TagAUX):
+		resolve = TagADJ // "politically stable", "remains solid", "is safe"
+	case next.HasTag(TagPUNCT | TagCCONJ):
+		resolve = TagADJ // predicative: "stable.", "safe and reliable"
+	}
+	if resolve != 0 {
+		tokens[i].Tags = resolve
+		tokens[i].Rule = t.Rule + "+adj-noun"
+	}
+}
+
+// disambiguateLay resolves "lay" ({ADJ,VERB}).
+// "lay" is almost always VERB when followed by ADP (particle/phrasal) or
+// preceded by a resolved PRON subject. The ADJ use ("lay preacher") is rare.
+func disambiguateLay(tokens []Token, i int) {
+	t := tokens[i]
+	if !t.HasTag(TagADJ) || !t.HasTag(TagVERB) {
+		return
+	}
+	prev := tokenAt(tokens, i-1)
+	next := tokenAt(tokens, i+1)
+	var resolve Tag
+	switch {
+	case next.HasTag(TagADP):
+		resolve = TagVERB // "lay off", "lay down", "lay on"
+	case resolvedAs(prev, TagPRON):
+		resolve = TagVERB // "I lay", "they lay", "she lay"
+	}
+	if resolve != 0 {
+		tokens[i].Tags = resolve
+		tokens[i].Rule = t.Rule + "+lay"
+	}
+}
+
 // disambiguateCapital resolves "capital" ({ADJ,NOUN}).
 // "capital" is almost always NOUN — as a standalone head, in compound nouns
 // ("capital city", "capital gains"), and after prepositions.

@@ -41,6 +41,17 @@ func TestDisambiguateByChunkNounVerb(t *testing.T) {
 		// NOUN/VERB inside NP → NOUN (resolved by chunk position)
 		{"the bison herd in the world", "herd", chunky.TagNOUN},
 		{"of cable television", "cable", chunky.TagNOUN},
+
+		// VP must not swallow a NOUN/VERB object after a non-auxiliary VERB.
+		// "made plans" → plans is direct object, not part of VP.
+		{"Noriega made plans to fly", "plans", chunky.TagNOUN},
+		{"the team made record profits this year", "record", chunky.TagNOUN},
+		{"Lilly attributed record third-quarter results", "record", chunky.TagNOUN},
+
+		// Two consecutive {NOUN,VERB} tokens: second must not extend VP.
+		// "had operating profit" → operating extends VP, profit is NP head.
+		{"He had operating profit of ten million", "profit", chunky.TagNOUN},
+		{"it had operating profit of ten million", "profit", chunky.TagNOUN},
 	}
 	for _, tc := range cases {
 		sents := Parse(tc.input)
