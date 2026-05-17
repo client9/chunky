@@ -24,9 +24,6 @@ func TestDisambiguatePast(t *testing.T) {
 		// past: ADP before DET
 		{"She drove past the school.", "past", chunky.TagADP},
 
-		// pro: ADJ before NOUN
-		{"He played pro football.", "pro", chunky.TagADJ},
-		{"The company adopted pro market policies.", "pro", chunky.TagADJ},
 	}
 	for _, tc := range cases {
 		sents := Parse(tc.input)

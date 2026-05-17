@@ -49,6 +49,11 @@ func TestDisambiguatePrepositions(t *testing.T) {
 
 		// behind: ADV after pure verb
 		{"The runner fell behind.", "behind", chunky.TagADV},
+
+		// about/around: ADV approximator before NUM
+		{"About 50 people attended.", "About", chunky.TagADV},
+		{"Around 100 years ago.", "Around", chunky.TagADV},
+		{"The project cost about 200 dollars.", "about", chunky.TagADV},
 	}
 	for _, tc := range cases {
 		sents := Parse(tc.input)

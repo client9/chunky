@@ -10,19 +10,21 @@ package tok
 // SCONJ is left as ADV: for chunking purposes both produce O (outside all
 // chunks), and SCONJ "then" in the linter's prose target is rare.
 func DisambiguateThen(tokens []Token) []Token {
-	for i, t := range tokens {
-		if t.Word != "then" && t.Word != "Then" {
-			continue
-		}
-		if !t.HasTag(TagADJ) || !t.HasTag(TagADV) || !t.HasTag(TagSCONJ) {
-			continue
-		}
-		tag := TagADV
-		if resolvedAs(tokenAt(tokens, i-1), TagDET) {
-			tag = TagADJ
-		}
-		tokens[i].Tags = tag
-		tokens[i].Rule = t.Rule + "+then"
+	for i := range tokens {
+		disambiguateThen(tokens, i)
 	}
 	return tokens
+}
+
+func disambiguateThen(tokens []Token, i int) {
+	t := tokens[i]
+	if !t.HasTag(TagADJ) || !t.HasTag(TagADV) || !t.HasTag(TagSCONJ) {
+		return
+	}
+	tag := TagADV
+	if resolvedAs(tokenAt(tokens, i-1), TagDET) {
+		tag = TagADJ
+	}
+	tokens[i].Tags = tag
+	tokens[i].Rule = t.Rule + "+then"
 }

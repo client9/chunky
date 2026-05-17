@@ -24,36 +24,35 @@ var subjectPronouns = map[string]bool{
 //   - next=NOUN|PROPN → ADP  ("after midnight", "before the war", "until victory")
 //   - next=PRON (object, not subject) → ADP  ("after him", "before them")
 func DisambiguateAfter(tokens []Token) []Token {
-	for i, t := range tokens {
-		if !t.HasTag(TagADP) || !t.HasTag(TagSCONJ) {
-			continue
-		}
-		lw := strings.ToLower(t.Word)
-		switch lw {
-		case "after", "before", "until":
-		default:
-			continue
-		}
-		next := tokenAt(tokens, i+1)
-		var resolve Tag
-		switch {
-		case subjectPronouns[strings.ToLower(next.Word)]:
-			resolve = TagSCONJ // "after he/she/they/we/I/who" — subject introduces clause
-		case next.HasTag(TagVERB | TagAUX):
-			resolve = TagADP // gerund/participle: "after graduating", "after being named"
-		case next.HasTag(TagNUM):
-			resolve = TagADP // "after 1945", "until 2025", "before 3 pm"
-		case next.HasTag(TagNOUN | TagPROPN):
-			resolve = TagADP // "after midnight", "before the war", "until victory"
-		case next.HasTag(TagPRON) && !subjectPronouns[strings.ToLower(next.Word)]:
-			resolve = TagADP // "after him", "before them", "until it"
-		case next.HasTag(TagPUNCT):
-			resolve = TagADP // sentence-final: "after.", rarely SCONJ
-		}
-		if resolve != 0 {
-			tokens[i].Tags = resolve
-			tokens[i].Rule = t.Rule + "+after"
-		}
+	for i := range tokens {
+		disambiguateAfter(tokens, i)
 	}
 	return tokens
+}
+
+func disambiguateAfter(tokens []Token, i int) {
+	t := tokens[i]
+	if !t.HasTag(TagADP) || !t.HasTag(TagSCONJ) {
+		return
+	}
+	next := tokenAt(tokens, i+1)
+	var resolve Tag
+	switch {
+	case subjectPronouns[strings.ToLower(next.Word)]:
+		resolve = TagSCONJ // "after he/she/they/we/I/who" — subject introduces clause
+	case next.HasTag(TagVERB | TagAUX):
+		resolve = TagADP // gerund/participle: "after graduating", "after being named"
+	case next.HasTag(TagNUM):
+		resolve = TagADP // "after 1945", "until 2025", "before 3 pm"
+	case next.HasTag(TagNOUN | TagPROPN):
+		resolve = TagADP // "after midnight", "before the war", "until victory"
+	case next.HasTag(TagPRON) && !subjectPronouns[strings.ToLower(next.Word)]:
+		resolve = TagADP // "after him", "before them", "until it"
+	case next.HasTag(TagPUNCT):
+		resolve = TagADP // sentence-final: "after.", rarely SCONJ
+	}
+	if resolve != 0 {
+		tokens[i].Tags = resolve
+		tokens[i].Rule = t.Rule + "+after"
+	}
 }

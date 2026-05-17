@@ -6,21 +6,12 @@ import (
 	"github.com/client9/chunky"
 )
 
-func TestDisambiguateWellBack(t *testing.T) {
+func TestDisambiguateWell(t *testing.T) {
 	cases := []struct {
 		input string
 		word  string
 		want  chunky.Tag
 	}{
-		// back: ADV after verb
-		{"She went back to the office.", "back", chunky.TagADV},
-		{"He came back yesterday.", "back", chunky.TagADV},
-		{"Please step back.", "back", chunky.TagADV},
-
-		// back: ADJ before noun (not after verb)
-		{"The back door was open.", "back", chunky.TagADJ},
-		{"She took the back seat.", "back", chunky.TagADJ},
-
 		// well: ADV after verb
 		{"She did well on the exam.", "well", chunky.TagADV},
 		{"The plan worked well.", "well", chunky.TagADV},

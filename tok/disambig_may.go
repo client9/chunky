@@ -10,22 +10,27 @@ package tok
 // because distinguishing "May I?" (AUX) from "in May we..." (PROPN) requires
 // knowing sentence position.
 func DisambiguateMay(tokens []Token) []Token {
-	for i, t := range tokens {
-		if !t.HasTag(TagAUX) || !t.HasTag(TagPROPN) {
-			continue
-		}
-		switch t.Word {
-		case "may":
-			tokens[i].Tags = TagAUX
-			tokens[i].Rule = t.Rule + "+may"
-		case "May":
-			if tokenAt(tokens, i+1).HasTag(TagNUM) {
-				tokens[i].Tags = TagPROPN
-				tokens[i].Rule = t.Rule + "+may"
-			}
-		}
+	for i := range tokens {
+		disambiguateMay(tokens, i)
 	}
 	return tokens
+}
+
+func disambiguateMay(tokens []Token, i int) {
+	t := tokens[i]
+	if !t.HasTag(TagAUX) || !t.HasTag(TagPROPN) {
+		return
+	}
+	switch t.Word {
+	case "may":
+		tokens[i].Tags = TagAUX
+		tokens[i].Rule = t.Rule + "+may"
+	case "May":
+		if tokenAt(tokens, i+1).HasTag(TagNUM) {
+			tokens[i].Tags = TagPROPN
+			tokens[i].Rule = t.Rule + "+may"
+		}
+	}
 }
 
 // RetagMay resolves sentence-initial "May" that DisambiguateMay could not

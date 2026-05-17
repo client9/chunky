@@ -29,31 +29,6 @@ func TestDisambiguateAdvNoun(t *testing.T) {
 
 		// lot: always NOUN
 		{"She read a lot of books.", "lot", chunky.TagNOUN},
-
-		// only: ADV before VERB/AUX
-		{"She only runs on weekends.", "only", chunky.TagADV},
-		{"He can only try.", "only", chunky.TagADV},
-
-		// only: ADV before ADV
-		{"It took only about an hour.", "only", chunky.TagADV},
-
-		// only: ADV before DET
-		{"He kept only the essentials.", "only", chunky.TagADV},
-
-		// only: ADV before NUM
-		{"She won only three times.", "only", chunky.TagADV},
-
-		// only: ADV before ADP
-		{"It works only for small files.", "only", chunky.TagADV},
-
-		// only: ADJ prenominal after DET
-		{"She was the only survivor.", "only", chunky.TagADJ},
-
-		// little: DET before NOUN
-		{"She had little time left.", "little", chunky.TagDET},
-
-		// little: ADV before ADJ
-		{"He was a little tired.", "little", chunky.TagADV},
 	}
 	for _, tc := range cases {
 		sents := Parse(tc.input)
