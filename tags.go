@@ -109,6 +109,76 @@ func ParseTag(s string) (Tag, error) {
 	return TagUNK, fmt.Errorf("pos: unknown tag %q", s)
 }
 
+// TagFromPennTag converts a Penn Treebank POS tag to UD candidate tags.
+// The returned Tag may have multiple bits set when the Penn tag is ambiguous
+// in UD (e.g. IN → ADP|SCONJ, VB* → VERB|AUX). Returns 0 for unrecognized tags.
+//
+// Key Penn→UD ambiguities:
+//   - VB/VBD/VBG/VBN/VBP/VBZ → VERB|AUX  (Penn has no AUX tag)
+//   - IN → ADP|SCONJ           (Penn conflates prepositions and subordinators)
+//   - TO → PART|ADP            (infinitive marker vs preposition)
+//   - RB → ADV|PART            (Penn uses RB for "not/n't" which is PART in UD)
+//   - WRB → ADV|SCONJ          (when/where used as subordinators are SCONJ in UD)
+//   - JJ → ADJ|NOUN|DET|ADV   (Penn uses JJ for prenominal nouns, quantifiers, degree words)
+//   - WDT → DET|PRON           (relative "which/that")
+//   - RBS → ADV|DET            (Penn uses RBS for quantifier "most" which is DET in UD)
+func TagFromPennTag(s string) Tag {
+	switch s {
+	case "NN", "NNS":
+		return TagNOUN
+	case "NNP", "NNPS":
+		return TagPROPN
+	case "VB", "VBD", "VBG", "VBN", "VBP", "VBZ":
+		return TagVERB | TagAUX
+	case "MD":
+		return TagAUX
+	case "JJ":
+		return TagADJ | TagNOUN | TagDET | TagADV
+	case "JJR":
+		return TagADJ | TagADV
+	case "JJS":
+		return TagADJ | TagADV
+	case "RB":
+		return TagADV | TagPART
+	case "RBR":
+		return TagADV
+	case "RBS":
+		return TagADV | TagDET
+	case "WRB":
+		return TagADV | TagSCONJ
+	case "DT", "PDT":
+		return TagDET
+	case "WDT":
+		return TagDET | TagPRON
+	case "IN":
+		return TagADP | TagSCONJ
+	case "TO":
+		return TagPART | TagADP
+	case "PRP", "PRP$", "WP", "WP$":
+		return TagPRON
+	case "EX":
+		return TagPRON
+	case "CC":
+		return TagCCONJ
+	case "RP":
+		return TagPART
+	case "POS":
+		return TagPART
+	case "CD":
+		return TagNUM
+	case "UH":
+		return TagINTJ
+	case ".", ",", ":", "''", "``", "-LRB-", "-RRB-":
+		return TagPUNCT
+	case "$", "#":
+		return TagSYM
+	case "FW", "LS":
+		return TagX
+	default:
+		return 0
+	}
+}
+
 // TagFromBrownTag converts a single Brown tag to the reduce tag set
 func TagFromBrownTag(s string) Tag {
 

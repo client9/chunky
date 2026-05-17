@@ -2,6 +2,12 @@ package tok
 
 import "github.com/client9/chunky"
 
+// closedClassOnly is the set of tags that are purely functional — words with
+// only these tags can never be proper nouns regardless of capitalization.
+const closedClassOnly = chunky.TagPRON | chunky.TagDET | chunky.TagADP | chunky.TagAUX |
+	chunky.TagSCONJ | chunky.TagCCONJ | chunky.TagPART | chunky.TagPUNCT |
+	chunky.TagINTJ | chunky.TagSYM
+
 // RetagCapitalized promotes mid-sentence capitalized known words to PROPN.
 // It runs per-sentence (inside Segment) so i==0 means sentence-initial.
 func RetagCapitalized(tokens []Token) []Token {
@@ -16,9 +22,15 @@ func RetagCapitalized(tokens []Token) []Token {
 			// the pipeline tag unchanged.
 			continue
 		}
-		// Non-sentence-initial: any known capitalized word → PROPN,
-		// except PRON ("I" is always capitalized in English).
-		if !t.IsUnknownTag() && !t.HasTag(chunky.TagPRON) {
+		// Skip words whose entire candidate set is closed-class: function words
+		// (ADP, SCONJ, CCONJ, AUX, DET, PART, PRON, PUNCT …) are never proper
+		// nouns regardless of capitalization. E.g. `` In the morning" should
+		// keep "In" as ADP, not become PROPN.
+		if t.Tags&^closedClassOnly == 0 {
+			continue
+		}
+		// Non-sentence-initial: known open-class capitalized word → PROPN.
+		if !t.IsUnknownTag() {
 			tokens[i].Tags = chunky.TagPROPN
 			tokens[i].Rule = t.Rule + "+caps"
 		}

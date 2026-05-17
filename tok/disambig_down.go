@@ -30,7 +30,7 @@ func DisambiguateDown(tokens []Token) []Token {
 				continue
 			}
 			switch {
-			case next.HasTag(TagDET | TagNOUN | TagPROPN | TagNUM | TagPRON):
+			case next.HasTag(TagDET | TagNOUN | TagPROPN | TagPRON):
 				resolve = TagADP // "down the stairs", "down her street"
 			case prev.HasTag(TagVERB) && !prev.HasTag(TagAUX):
 				resolve = TagADV

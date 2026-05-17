@@ -17,6 +17,11 @@ func DisambiguatePlus(tokens []Token) []Token {
 		if strings.ToLower(t.Word) != "plus" {
 			continue
 		}
+		// Capitalized "Plus" mid-sentence is a brand name (Disney Plus, Apple TV+).
+		// Leave it for RetagCapitalized rather than forcing CCONJ.
+		if t.Word[0] == 'P' {
+			continue
+		}
 		prev, next := tokenAt(tokens, i-1), tokenAt(tokens, i+1)
 		var resolve Tag
 		switch {

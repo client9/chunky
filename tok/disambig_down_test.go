@@ -12,14 +12,14 @@ func TestDisambiguateDown(t *testing.T) {
 		word  string
 		want  chunky.Tag
 	}{
-		// down: ADP before DET/NOUN/PROPN/NUM
+		// down: ADP before DET/NOUN/PROPN
 		{"She walked down the stairs.", "down", chunky.TagADP},
 		{"Drive down Main Street.", "down", chunky.TagADP},
-		{"She counted down 10 seconds.", "down", chunky.TagADP},
 
-		// down: ADV after pure verb
+		// down: ADV — particle after verb, or bare number (financial "closed down 1.05")
 		{"The system went down.", "down", chunky.TagADV},
 		{"The car broke down.", "down", chunky.TagADV},
+		{"She counted down 10 seconds.", "down", chunky.TagADV}, // phrasal verb particle
 
 		// near: ADP before DET/NOUN/PROPN
 		{"She sat near the window.", "near", chunky.TagADP},

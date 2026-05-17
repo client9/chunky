@@ -4,13 +4,15 @@ import "strings"
 
 // DisambiguateFollowing resolves the ADP/NOUN/VERB ambiguity on "following".
 //
-// VERB (gerund/participle, used prepositionally):
-//   - next=DET|PROPN|PRON|NUM|ADJ → VERB  ("following the announcement", "following his resignation")
+// ADP (prepositional gerund): next=DET|PROPN|PRON|NUM|ADJ →
+//
+//	"following the announcement", "following his resignation"
 //
 // NOUN ("the following"):
-//   - next=AUX → NOUN  ("the following was announced")
 //
-// ADJ ("the following day") — left ambiguous with VERB when next=NOUN (50/50 in corpus).
+//	next=AUX → "the following was announced"
+//
+// ADJ ("the following day") — left ambiguous with ADP when next=NOUN (50/50 in corpus).
 func DisambiguateFollowing(tokens []Token) []Token {
 	for i, t := range tokens {
 		if !t.HasTag(TagVERB) || !t.HasTag(TagNOUN) {
@@ -24,7 +26,8 @@ func DisambiguateFollowing(tokens []Token) []Token {
 		var resolve Tag
 		switch {
 		case next.HasTag(TagDET | TagPROPN | TagPRON | TagNUM | TagADJ):
-			resolve = TagVERB
+			// Prepositional use: "following the/his/their/three ..."
+			resolve = TagADP
 		case next.HasTag(TagAUX):
 			resolve = TagNOUN
 		}

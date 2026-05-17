@@ -5,7 +5,8 @@ package tok
 // Resolved as SCONJ (complementizer):
 //   - prev=VERB   → "said that", "argued that", "knowing that"
 //   - prev=ADJ    → "confident that", "sure that", "aware that"
-//   - next=DET    → "that the/a/an ..." (existing rule)
+//   - next=DET    → "that the/a/an ..." (includes still-ambiguous DET like "more")
+//   - prev=NOUN, next=PRON → appositive clause: "the fact that he/she/it/they..."
 //
 // DET ("that car") and PRON ("after that") require wider context and are
 // left for downstream rules.
@@ -27,7 +28,13 @@ func DisambiguateThat(tokens []Token) []Token {
 		case resolvedAs(prev, TagADJ) && next.HasTag(TagDET|TagPRON|TagNOUN|TagPROPN|TagADV|TagAUX):
 			// "confident that it/the..." — complementizer
 			resolve = TagSCONJ
-		case resolvedAs(next, TagDET):
+		case next.HasTag(TagDET):
+			// "that the/a/more ..." — next has DET anywhere in its candidate set;
+			// covers still-ambiguous words like "more" ({ADV,DET}) before DisambiguateMore runs
+			resolve = TagSCONJ
+		case resolvedAs(prev, TagNOUN) && resolvedAs(next, TagPRON):
+			// Appositive complement clause: "the fact that he/she/it/they ..."
+			// NOUN + that + subject-pronoun is reliably a complementizer, not a relative.
 			resolve = TagSCONJ
 		}
 		if resolve != 0 {

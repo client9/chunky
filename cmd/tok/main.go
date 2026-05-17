@@ -30,8 +30,8 @@ func main() {
 		fmt.Println("")
 
 	case "md":
-		fmt.Println("| sent | offset | word | tags | rule |")
-		fmt.Println("|------|--------|------|------|------|")
+		fmt.Println("| sent | offset | word | tags | chunk | rule |")
+		fmt.Println("|------|--------|------|------|-------|------|")
 
 		for sn, s := range sentences {
 			for _, t := range s.Tokens {
@@ -39,7 +39,11 @@ func main() {
 				if t.IsUnknownTag() {
 					tags = "**UNK**"
 				}
-				fmt.Printf("| %d | %d | %s | %s | %s |\n", sn+1, t.Offset, t.Word, tags, t.Rule)
+				chunk := t.Chunk.String()
+				if chunk == "O" {
+					chunk = ""
+				}
+				fmt.Printf("| %d | %d | %s | %s | %s | %s |\n", sn+1, t.Offset, t.Word, tags, chunk, t.Rule)
 			}
 		}
 		fmt.Println("")

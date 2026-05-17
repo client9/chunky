@@ -18,6 +18,12 @@ func TestRetagCapitalized(t *testing.T) {
 		{"Walked the dog.", "Walked", chunky.TagVERB},
 		// "I" is PRON and must never be promoted to PROPN.
 		{"She and I went.", "I", chunky.TagPRON},
+		// Pure closed-class words must NOT be promoted even when capitalized mid-sentence.
+		// Occurs after opening quotes: `` In the morning, ...
+		{"She said `` In the morning.", "In", chunky.TagADP},
+		{"She said `` By contrast.", "By", chunky.TagADP},
+		{"She said `` For example.", "For", chunky.TagADP},
+		{"She said `` With that.", "With", chunky.TagADP},
 	}
 	for _, tc := range cases {
 		sents := Parse(tc.input)

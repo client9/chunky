@@ -12,13 +12,13 @@ func TestDisambiguateFollowing(t *testing.T) {
 		word  string
 		want  chunky.Tag
 	}{
-		// VERB: before DET (prepositional/gerund use)
-		{"Following the announcement, trading halted.", "Following", chunky.TagVERB},
-		{"The protest erupted following the decision.", "following", chunky.TagVERB},
+		// ADP (prepositional): before DET
+		{"Following the announcement, trading halted.", "Following", chunky.TagADP},
+		{"The protest erupted following the decision.", "following", chunky.TagADP},
 
-		// VERB: before PRON
-		{"Following his resignation, the board met.", "Following", chunky.TagVERB},
-		{"Following their victory, the team celebrated.", "Following", chunky.TagVERB},
+		// ADP (prepositional): before PRON
+		{"Following his resignation, the board met.", "Following", chunky.TagADP},
+		{"Following their victory, the team celebrated.", "Following", chunky.TagADP},
 
 		// NOUN: before AUX ("the following was/were")
 		{"The following was announced.", "following", chunky.TagNOUN},
