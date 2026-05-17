@@ -7,10 +7,10 @@ import (
 
 func TestTagFromPennTag(t *testing.T) {
 	cases := []struct {
-		penn      string
-		wantBits  int  // expected number of UD bits (1 = unambiguous, >1 = ambiguous)
-		wantTag   Tag  // exact match when wantBits == 1
-		mustHave  Tag  // for ambiguous: all these bits must be set
+		penn     string
+		wantBits int // expected number of UD bits (1 = unambiguous, >1 = ambiguous)
+		wantTag  Tag // exact match when wantBits == 1
+		mustHave Tag // for ambiguous: all these bits must be set
 	}{
 		// Unambiguous — single UD mapping.
 		{"NN", 1, TagNOUN, 0},
@@ -53,9 +53,9 @@ func TestTagFromPennTag(t *testing.T) {
 		{"JJS", 2, 0, TagADJ | TagADV},
 
 		// Adverbs.
-		{"RB", 2, 0, TagADV | TagPART},  // "not/n't" → PART in UD
+		{"RB", 2, 0, TagADV | TagPART}, // "not/n't" → PART in UD
 		{"RBR", 1, TagADV, 0},
-		{"RBS", 2, 0, TagADV | TagDET},  // "most" → DET in UD
+		{"RBS", 2, 0, TagADV | TagDET}, // "most" → DET in UD
 
 		// Interrogative/relative adverbs — when/where as subordinators → SCONJ.
 		{"WRB", 2, 0, TagADV | TagSCONJ},

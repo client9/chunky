@@ -21,11 +21,11 @@ var WordTags = map[string]Tag{
 	"$":  TagSYM,   // as per spaCy
 	"%":  TagNOUN,  // as per spaCy
 	"_":  TagPUNCT,
-	"\"":  TagPUNCT,
-	"''":  TagPUNCT, // closing double quote (Penn Treebank convention)
-	"``":  TagPUNCT, // opening double quote (Penn Treebank convention)
-	"–":   TagPUNCT, // en dash
-	"—":   TagPUNCT, // em dash
+	"\"": TagPUNCT,
+	"''": TagPUNCT, // closing double quote (Penn Treebank convention)
+	"``": TagPUNCT, // opening double quote (Penn Treebank convention)
+	"–":  TagPUNCT, // en dash
+	"—":  TagPUNCT, // em dash
 
 	// Brown corpus assigns DET to these but spaCy/UD always tags them ADJ.
 	// They are gradable prenominal modifiers, never true determiners.
@@ -145,16 +145,16 @@ var WordTags = map[string]Tag{
 
 	// Abbreviations used as common nouns — not proper names — so capitalized
 	// forms (TV, CDs, ADRs) are not promoted to PROPN by RetagCapitalized.
-	"tv":    TagNOUN,
-	"cds":   TagNOUN,
-	"cd":    TagNOUN,
-	"adrs":  TagNOUN,
-	"adr":   TagNOUN,
-	"dvd":   TagNOUN,
-	"dvds":  TagNOUN,
-	"pc":    TagNOUN,
-	"pcs":   TagNOUN,
-	"atm":   TagNOUN,
+	"tv":     TagNOUN,
+	"cds":    TagNOUN,
+	"cd":     TagNOUN,
+	"adrs":   TagNOUN,
+	"adr":    TagNOUN,
+	"dvd":    TagNOUN,
+	"dvds":   TagNOUN,
+	"pc":     TagNOUN,
+	"pcs":    TagNOUN,
+	"atm":    TagNOUN,
 	"remics": TagNOUN,
 	"remic":  TagNOUN,
 
