@@ -18,6 +18,8 @@ func disambiguateAdjAdvDefault(tokens []Token, i int) {
 		resolve = TagADJ
 	case prev.HasTag(TagVERB) && !prev.HasTag(TagAUX):
 		resolve = TagADV
+	case resolvedAs(next, TagPART):
+		resolve = TagADJ // "easier to do", "good to go", "harder to find"
 	case prev.HasTag(TagADV | TagPART):
 		resolve = TagADV // "very far", "not hard", "too short", "almost alone"
 	case prev.HasTag(TagAUX) && next.HasTag(TagPUNCT|TagCCONJ|TagSCONJ|TagADP):

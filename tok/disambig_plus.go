@@ -1,6 +1,5 @@
 package tok
 
-
 // DisambiguatePlus resolves {CCONJ,PROPN} for "plus".
 //
 // CCONJ (additive):  "three plus four", "cost plus tax", "a bonus, plus benefits"

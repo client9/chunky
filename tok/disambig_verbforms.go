@@ -1,6 +1,5 @@
 package tok
 
-
 // DisambiguateVerbForms resolves common NOUN|VERB words that appear frequently
 // as finite verbs in subject-verb position. When the preceding token is a
 // resolved nominal (NOUN, PROPN, PRON, NUM) the word is a finite verb.

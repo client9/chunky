@@ -1,6 +1,5 @@
 package tok
 
-
 // DisambiguateMore resolves the ADV/DET ambiguity on degree quantifiers.
 //
 // Quantifier/determiner (DET): "more people", "most cities", "much time"

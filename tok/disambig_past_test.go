@@ -23,7 +23,6 @@ func TestDisambiguatePast(t *testing.T) {
 
 		// past: ADP before DET
 		{"She drove past the school.", "past", chunky.TagADP},
-
 	}
 	for _, tc := range cases {
 		sents := Parse(tc.input)

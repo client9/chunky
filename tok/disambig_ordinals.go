@@ -1,6 +1,5 @@
 package tok
 
-
 // DisambiguateOrdinals resolves the ADV/NUM ambiguity on ordinal words.
 //
 // "first" lexicon: ADV|NUM
@@ -46,6 +45,10 @@ func disambiguateOrdinals(tokens []Token, i int) {
 		resolve = TagADV // "first of all", "second of the month"
 	case next.HasTag(TagPUNCT) && !prev.HasTag(TagDET|TagPRON|TagNOUN|TagPROPN):
 		resolve = TagADV // "First,", "second." — discourse marker at sentence start or after clause
+	case prev.HasTag(TagAUX) && resolvedAs(next, TagPART):
+		resolve = TagADV // "was first to arrive", "had first to decide"
+	case prev.HasTag(TagDET|TagPRON) && next.HasTag(TagPUNCT) && !t.HasTag(TagNOUN):
+		resolve = TagNUM // "the first." — ordinal pronoun (not "a second." which is time-unit NOUN)
 	case t.HasTag(TagNOUN) && prev.HasTag(TagDET) && !next.HasTag(TagNOUN|TagADJ|TagPROPN):
 		resolve = TagNOUN // "a second", "the third" (time unit, no following noun)
 	}

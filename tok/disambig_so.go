@@ -1,6 +1,5 @@
 package tok
 
-
 // DisambiguateSo resolves the ADV/SCONJ ambiguity on "so".
 //
 // Intensifier (ADV):    "so good", "so quickly"

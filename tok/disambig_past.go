@@ -1,6 +1,5 @@
 package tok
 
-
 // DisambiguatePast resolves the ADJ/ADP/NOUN ambiguity on "past".
 //
 // "past" (ADJ 45%, ADP 30%, NOUN 25%):
