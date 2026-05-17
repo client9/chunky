@@ -144,6 +144,7 @@ var wordHandlers = map[string]func([]Token, int){
 	"plus":          disambiguatePlus,
 	"prior":         disambiguatePrior,
 	"pro":           disambiguatePro,
+	"pursuant":      disambiguateLike,
 	"quick":         disambiguateAdjAdvDefault,
 	"quicker":       disambiguateAdjAdvDefault,
 	"quickest":      disambiguateAdjAdvDefault,
@@ -220,7 +221,6 @@ var wordHandlers = map[string]func([]Token, int){
 	"will":          disambiguateWill,
 	"wrong":         disambiguateAdjAdvDefault,
 	"yet":           disambiguateYet,
-	"pursuant":      disambiguateLike,
 }
 
 // disambiguateUpAll chains the particle handler (ADP|ADV) with the NOUN-bit handler.
