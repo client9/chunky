@@ -8,6 +8,14 @@ import (
 	"github.com/client9/chunky"
 )
 
+// isSentenceEndPunct reports whether word is a sentence-terminating punctuation
+// mark. Used by TagUnknowns to suppress the capitalization signal for words
+// that appear at sentence-initial position in the flat (pre-segmentation) token
+// array — sentence-initial capitalisation carries no POS information.
+func isSentenceEndPunct(word string) bool {
+	return word == "." || word == "!" || word == "?"
+}
+
 // TagUnknowns fills in candidate tags for tokens that have none, trying rules
 // in order: numeric → inflection → hyphen → morphology → alpha fallback.
 func TagUnknowns(tokens []Token) []Token {
@@ -15,6 +23,12 @@ func TagUnknowns(tokens []Token) []Token {
 		if !t.IsUnknownTag() {
 			continue
 		}
+		// Treat as sentence-initial (suppress caps signal) when the token is
+		// the first in the flat array OR immediately follows a sentence-ending
+		// punctuation mark. Segmentation has not run yet, so this approximation
+		// is the best available signal.
+		sentenceInitial := i == 0 || isSentenceEndPunct(tokens[i-1].Word)
+
 		if candidates, rule := NumericCandidates(t.Word); candidates != 0 {
 			tokens[i].Tags = candidates
 			tokens[i].Rule = rule
@@ -30,7 +44,7 @@ func TagUnknowns(tokens []Token) []Token {
 			tokens[i].Rule = rule
 			continue
 		}
-		if candidates, rule := MorphCandidates(t.Word, i == 0); candidates != 0 {
+		if candidates, rule := MorphCandidates(t.Word, sentenceInitial); candidates != 0 {
 			tokens[i].Tags = candidates
 			tokens[i].Rule = rule
 			continue

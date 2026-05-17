@@ -8,9 +8,9 @@ import "strings"
 //   - next=ADP → ADV  ("south of the border", "heading south of")
 //   - prev=DET → NOUN ("the south", "a south")
 //
-// "north", "east", "west" lexicon: ADJ|NOUN
-//   - prev=DET → NOUN ("the north", "in the east")
-//     otherwise → ADJ  ("north side", "east coast")
+// "north", "east", "west", "northwest", "northeast", "southeast", "southwest" lexicon: ADJ|NOUN
+//   - next=PROPN → ADJ ("North Korea", "Southwest Airlines", "Southeast Asia")
+//   - prev=DET   → NOUN ("the north", "the northwest", "in the east")
 func DisambiguateDirectionals(tokens []Token) []Token {
 	for i, t := range tokens {
 		if !t.HasTag(TagADJ) || !t.HasTag(TagNOUN) {
@@ -34,12 +34,15 @@ func DisambiguateDirectionals(tokens []Token) []Token {
 			case detPrevNoun:
 				resolve = TagNOUN
 			}
-		case "north", "east", "west":
+		case "north", "east", "west",
+			"northwest", "northeast", "southeast", "southwest":
 			switch {
 			case next.HasTag(TagPROPN):
-				resolve = TagADJ // "North Korea", "East Germany", "West Africa"
+				resolve = TagADJ // "North Korea", "Northeast Asia", "Southwest Airlines"
+			case resolvedAs(next, TagADP):
+				resolve = TagNOUN // "northwest of the city", "north of the border"
 			case detPrevNoun:
-				resolve = TagNOUN
+				resolve = TagNOUN // "the northwest", "the southeast"
 			}
 		default:
 			continue

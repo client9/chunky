@@ -32,9 +32,22 @@ func RetagCapitalized(tokens []Token) []Token {
 		}
 		if i == 0 {
 			// Sentence-initial capitalization is grammatical, not semantic.
-			// We cannot distinguish a proper noun from a sentence-initial verb or
-			// participle (e.g. "Walked the dog." vs "Ted is here."), so we leave
-			// the pipeline tag unchanged.
+			// Exception: a NOUN, ADJ, or {ADJ,NOUN} token immediately before a
+			// capitalized open-class word is a name component — promote to PROPN.
+			// "Robert Edward Turner": Robert→NOUN, Edward→{PROPN,ADJ}
+			// "Great American Bank": Great→ADJ, American→NOUN→promoted
+			// "Northeast Brazil": Northeast→{ADJ,NOUN}, Brazil→NOUN→promoted
+			isNominalCandidate := t.Tags == chunky.TagNOUN ||
+				t.Tags == chunky.TagADJ ||
+				t.Tags == chunky.TagADJ|chunky.TagNOUN
+			if i+1 < len(tokens) && isNominalCandidate {
+				next := tokens[i+1]
+				if len(next.Word) > 0 && next.Word[0] >= 'A' && next.Word[0] <= 'Z' &&
+					next.Tags&^closedClassOnly != 0 {
+					tokens[i].Tags = chunky.TagPROPN
+					tokens[i].Rule = t.Rule + "+caps"
+				}
+			}
 			continue
 		}
 		// Skip words whose entire candidate set is closed-class: function words

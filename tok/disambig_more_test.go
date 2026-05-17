@@ -19,6 +19,10 @@ func TestDisambiguateMore(t *testing.T) {
 		{"He worked much harder.", "much", chunky.TagADV},
 		{"She arrived less often.", "less", chunky.TagADV},
 
+		// ADV: coordinating conjunction before "more" (additive comparison)
+		{"returns of 20 % or more per year", "more", chunky.TagADV},
+		{"earnings equal to or less than last year", "less", chunky.TagADV},
+
 		// DET: quantifier before noun
 		{"More people attended.", "More", chunky.TagDET},
 		{"Most cities have parks.", "Most", chunky.TagDET},

@@ -6,6 +6,63 @@ import (
 	"github.com/client9/chunky"
 )
 
+// TestSentenceInitialOOVNoun checks that an unknown capitalized word at the
+// start of a non-first sentence is not given the caps (PROPN|ADJ) signal.
+// Sentence-initial capitalisation carries no POS information — "HFRS" and
+// "Ribavirin" are common nouns, not proper names. TagUnknowns approximates
+// sentence boundaries by checking for a preceding sentence-end punctuation
+// mark, suppressing the MorphCandidates caps rule in that position.
+func TestSentenceInitialOOVNoun(t *testing.T) {
+	cases := []struct {
+		input string
+		word  string
+	}{
+		// Medical abbreviation — NOUN, not PROPN.
+		{"Fever is common. HFRS is due to a virus.", "HFRS"},
+		// Drug name used as a common noun in medical prose.
+		{"Treatment varies. Ribavirin may be useful.", "Ribavirin"},
+		// Invented unknown word at sentence start — caps signal suppressed.
+		{"First sentence here. Zalbrutix was administered.", "Zalbrutix"},
+	}
+	for _, tc := range cases {
+		sents := Parse(tc.input)
+		got, resolved := tagOf(sents, tc.word)
+		if !resolved {
+			t.Errorf("Parse(%q) %q: still ambiguous, want NOUN", tc.input, tc.word)
+			continue
+		}
+		if got != chunky.TagNOUN {
+			t.Errorf("Parse(%q) %q: got %v, want NOUN", tc.input, tc.word, got)
+		}
+	}
+}
+
+func TestSentenceInitialPropnChain(t *testing.T) {
+	cases := []struct {
+		input string
+		word  string
+	}{
+		// OOV first name followed by a known capitalized name component.
+		{"Robert Edward Turner III was born.", "Robert"},
+		// OOV first name followed by an OOV last name that gets caps→PROPN.
+		{"Zalbrutix Morwick arrived.", "Zalbrutix"},
+		// Sentence-initial word resolved to ADJ followed by PROPN → PROPN.
+		{"Great American Bank failed.", "Great"},
+		{"Eastern Airlines reported losses.", "Eastern"},
+	}
+	for _, tc := range cases {
+		sents := Parse(tc.input)
+		got, resolved := tagOf(sents, tc.word)
+		if !resolved {
+			t.Errorf("Parse(%q) %q: still ambiguous, want PROPN", tc.input, tc.word)
+			continue
+		}
+		if got != chunky.TagPROPN {
+			t.Errorf("Parse(%q) %q: got %v, want PROPN", tc.input, tc.word, got)
+		}
+	}
+}
+
 func TestRetagCapitalized(t *testing.T) {
 	cases := []struct {
 		input string

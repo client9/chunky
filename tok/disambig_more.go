@@ -33,6 +33,8 @@ func DisambiguateMore(tokens []Token) []Token {
 			resolve = TagDET // "most of the time", "more of the same"
 		case next.HasTag(TagPUNCT | TagCCONJ):
 			resolve = TagADV // "they want more.", "more and more"
+		case prev.HasTag(TagCCONJ):
+			resolve = TagADV // "or more", "or less"
 		case prev.HasTag(TagAUX|TagVERB) && !next.HasTag(TagNOUN|TagADJ|TagPROPN):
 			resolve = TagADV // "is more", "becomes more" (not before noun phrase)
 		}

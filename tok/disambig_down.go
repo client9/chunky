@@ -32,10 +32,16 @@ func DisambiguateDown(tokens []Token) []Token {
 			switch {
 			case next.HasTag(TagDET | TagNOUN | TagPROPN | TagPRON):
 				resolve = TagADP // "down the stairs", "down her street"
+			case next.HasTag(TagPART):
+				resolve = TagADP // "down to", "down for"
+			case resolvedAs(prev, TagAUX):
+				resolve = TagADV // "is down", "will be down"
 			case prev.HasTag(TagVERB) && !prev.HasTag(TagAUX):
 				resolve = TagADV
 			case next.HasTag(TagPUNCT | TagADV | TagADJ | TagSCONJ):
 				resolve = TagADV // "fell down.", "down low", "down as"
+			case resolvedAs(prev, TagPUNCT):
+				resolve = TagADV // ", down she went"
 			}
 		case "near":
 			if !t.HasTag(TagADP) {

@@ -6,6 +6,7 @@ package tok
 //
 // Add new word-specific passes here — this is the single registration point.
 func DisambiguateWords(tokens []Token) []Token {
+	tokens = DisambiguateContractionFragments(tokens)
 	tokens = DisambiguateApostropheS(tokens)
 	tokens = DisambiguateThere(tokens)
 	tokens = DisambiguateMay(tokens)
@@ -19,13 +20,19 @@ func DisambiguateWords(tokens []Token) []Token {
 	tokens = DisambiguateSo(tokens)
 	tokens = DisambiguateOrdinals(tokens)
 	tokens = DisambiguateHalf(tokens)
+	tokens = DisambiguateFree(tokens)
+	tokens = DisambiguateHigh(tokens)
+	tokens = DisambiguateRight(tokens)
 	tokens = DisambiguateAdjAdv(tokens)
 	tokens = DisambiguateAdvNoun(tokens)
+	tokens = DisambiguateAs(tokens)
 	tokens = DisambiguateMore(tokens)
 	tokens = DisambiguateAfter(tokens)
 	tokens = DisambiguateVerbForms(tokens)
 	tokens = DisambiguateWellBack(tokens)
 	tokens = DisambiguateDown(tokens)
+	tokens = DisambiguateUp(tokens)
+	tokens = DisambiguateLong(tokens)
 	tokens = DisambiguateQuantifiers(tokens)
 	tokens = DisambiguateSuch(tokens)
 	tokens = DisambiguateAbove(tokens)

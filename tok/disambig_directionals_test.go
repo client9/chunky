@@ -34,6 +34,23 @@ func TestDisambiguateDirectionals(t *testing.T) {
 		{"The south side of town was quiet.", "south", chunky.TagADJ},
 		// prenominal ADJ: resolves to ADJ via adjNounBroadRule (before NOUN) or chunk context
 		{"A north wind blew in.", "north", chunky.TagADJ},
+
+		// directionals: NOUN when followed by ADP "of"
+		{"100 km northwest of the city .", "northwest", chunky.TagNOUN},
+		{"Ingolstadt , northwest of Landshut .", "northwest", chunky.TagNOUN},
+		{"It lies north of the river .", "north", chunky.TagNOUN},
+		{"The town sits east of the highway .", "east", chunky.TagNOUN},
+
+		// compound directionals: NOUN when preceded by DET
+		{"The northwest was hit hardest.", "northwest", chunky.TagNOUN},
+		{"Storms swept through the northeast.", "northeast", chunky.TagNOUN},
+		{"Trade routes crossed the southeast.", "southeast", chunky.TagNOUN},
+		{"Rain fell across the southwest.", "southwest", chunky.TagNOUN},
+
+		// compound directionals: PROPN when part of a proper name (sentence-initial caps chain)
+		{"Southwest Airlines reported a loss.", "Southwest", chunky.TagPROPN},
+		{"Southeast Asia saw rapid growth.", "Southeast", chunky.TagPROPN},
+		{"Northeast Brazil was affected.", "Northeast", chunky.TagPROPN},
 	}
 	for _, tc := range cases {
 		sents := Parse(tc.input)

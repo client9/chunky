@@ -7,11 +7,13 @@ import "strings"
 // both/neither: next=DET|NOUN|ADJ|PROPN|NUM → DET; prev=PRON|VERB → PRON
 // either:       next=DET|NOUN|ADJ|PROPN     → DET
 // all:          next=DET|NOUN|ADJ|PROPN|NUM → DET; prev=PRON|VERB → PRON
+// each:         next=NOUN|PROPN|ADJ|NUM     → DET; next=ADP|AUX|VERB|PUNCT|CCONJ → PRON
+// any:          next=NOUN|PROPN|ADJ|NUM     → DET; next=ADP|PUNCT → PRON
 func DisambiguateQuantifiers(tokens []Token) []Token {
 	for i, t := range tokens {
 		lw := strings.ToLower(t.Word)
 		switch lw {
-		case "both", "neither", "either", "all":
+		case "both", "neither", "either", "all", "each", "any":
 		default:
 			continue
 		}
@@ -56,6 +58,30 @@ func DisambiguateQuantifiers(tokens []Token) []Token {
 				resolve = TagDET
 			case resolvedAs(prev, TagPRON) || resolvedAs(prev, TagNOUN):
 				resolve = TagPRON
+			case prev.HasTag(TagADP|TagADV) && next.HasTag(TagPUNCT):
+				resolve = TagADV // "above all.", "after all,", "not at all."
+			}
+		case "each":
+			if !t.HasTag(TagDET) {
+				continue
+			}
+			switch {
+			case next.HasTag(TagNOUN | TagPROPN | TagADJ | TagNUM):
+				resolve = TagDET // "each team", "each player"
+			case next.HasTag(TagADP | TagAUX | TagVERB | TagPUNCT | TagCCONJ):
+				resolve = TagPRON // "each of", "each will", "each said", "each.", "each and"
+			}
+		case "any":
+			if !t.HasTag(TagDET) {
+				continue
+			}
+			switch {
+			case next.HasTag(TagNOUN | TagPROPN | TagADJ | TagNUM):
+				resolve = TagDET // "any team", "any suggestion"
+			case next.HasTag(TagADP):
+				resolve = TagPRON // "any of them"
+			case next.HasTag(TagPUNCT):
+				resolve = TagPRON // "if any.", "not any,"
 			}
 		}
 		if resolve != 0 {

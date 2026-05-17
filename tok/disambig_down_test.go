@@ -16,10 +16,16 @@ func TestDisambiguateDown(t *testing.T) {
 		{"She walked down the stairs.", "down", chunky.TagADP},
 		{"Drive down Main Street.", "down", chunky.TagADP},
 
+		// down: ADP before PART ("down to")
+		{"she sat down to rest .", "down", chunky.TagADP},
+
 		// down: ADV — particle after verb, or bare number (financial "closed down 1.05")
 		{"The system went down.", "down", chunky.TagADV},
 		{"The car broke down.", "down", chunky.TagADV},
 		{"She counted down 10 seconds.", "down", chunky.TagADV}, // phrasal verb particle
+
+		// down: ADV after AUX ("is down", "will be down")
+		{"the system is down for maintenance .", "down", chunky.TagADV},
 
 		// near: ADP before DET/NOUN/PROPN
 		{"She sat near the window.", "near", chunky.TagADP},
